@@ -5,16 +5,14 @@ import { FrontendBoard } from "../types/global.types"
 
 export default class Board {
   private board: FrontendBoard = []
-  private fen: string
 
-  constructor() {
-    this.fen = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
-    this.createInitialBoardState()
+  constructor(fen: string) {
+    this.createInitialBoardState(fen)
   }
 
-  private createInitialBoardState(): void {
+  private createInitialBoardState(fen: string): void {
     this.board = Array.from({ length: 8 }, () => Array(8).fill(null));
-    this.converFENToBoardState(this.fen)
+    this.converFENToBoardState(fen)
   }
 
   private createPieceFromFENChar(char: string): Piece {
@@ -32,9 +30,9 @@ export default class Board {
   converFENToBoardState(fen: string) {
     try {
       let currentRow: number = 0;
-      //const board: Array<Array<Piece|null>> = []
 
-      for (const row of fen.split("/")) {
+      const position: string = fen.split(" ")[0]
+      for (const row of position.split("/")) {
         let currentCol: number = 0;
 
         for(const char of row) {

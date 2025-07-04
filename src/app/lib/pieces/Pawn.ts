@@ -1,6 +1,7 @@
 import { PieceType, PieceColor } from "@/app/types/global.enums";
 import { Piece } from "@/app/types/global.interfaces";
-import { Position } from "@/app/types/global.types";
+import { FrontendBoard, Position } from "@/app/types/global.types";
+import { doesPossitionContainPiece, isPositionOutOfBound } from "./pieces.helpers";
 
 export default class Pawn implements Piece {
   private type: PieceType
@@ -19,8 +20,23 @@ export default class Pawn implements Piece {
     return this.type
   }
 
-  getValidMoves(): Array<Position> {
+  getValidMoves(piecePos: Position, board: FrontendBoard): Array<Position> {
     const validMoves: Array<Position> = []
+    const direction: number = this.color === PieceColor.WHITE ? -1 : 1
+
+    let newPos: Position = {row: piecePos.row + direction, col: piecePos.col}
+    
+    if (!isPositionOutOfBound(newPos) && !doesPossitionContainPiece(newPos, board)) {
+      validMoves.push(newPos)
+    }
+
+    newPos = {row: piecePos.row + (direction * 2), col: piecePos.col}
+
+    if(!isPositionOutOfBound(newPos) && !doesPossitionContainPiece(newPos, board)) {
+      if((this.color === PieceColor.BLACK && piecePos.row === 1) || (this.color === PieceColor.WHITE && piecePos.row === 6)) {
+        validMoves.push(newPos)
+      }
+    }
 
     return validMoves
   }
