@@ -27,6 +27,7 @@ export default function VisualBoard() {
   const [selectedPosition, setSelectedPosition] = useState<Position>({row: -1, col: -1})
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null)
   const [validMoves, setValidMoves] = useState<Array<Position>>([])
+  const [attackMoves, setAttackMoves] = useState<Array<Position>>([])
   const [turn, setTurn] = useState<PieceColor>(game.getTurn())
 
   useEffect(() : void => {
@@ -34,33 +35,26 @@ export default function VisualBoard() {
   }, [])
 
   function handleSquareClicked(row: number, col: number) {
-    console.log(turn)
     const position: Position = {row: row, col: col}
     
     // do this if piece is already selected
     if(selectedPiece !== null) {
-      console.log("hmmm")
       game.moveAPiece(selectedPiece.getType(), selectedPosition, position)
       setBoard(game.getBoard())
       setSelectedPiece(null)
       setSelectedPosition({row: -1, col: -1})
       setValidMoves([])
+      setAttackMoves([])
       setTurn(game.getTurn())
       return
     }
 
     const currentPiece: Piece | null = board[position.row][position.col]
 
-    if(currentPiece === null) {
+    if(currentPiece === null || currentPiece.getColor() !== turn) {
       setSelectedPosition({row: -1, col: -1})
       setValidMoves([])
-      setSelectedPiece(null)
-      return
-    }
-
-    if(currentPiece.getColor() !== turn) {
-      setSelectedPosition({row: -1, col: -1})
-      setValidMoves([])
+      setAttackMoves([])
       setSelectedPiece(null)
       return
     }
@@ -68,7 +62,9 @@ export default function VisualBoard() {
     setSelectedPiece(currentPiece)
     setSelectedPosition(position)
     const moves: Array<Position> = currentPiece.getValidMoves(position, board)
+    const attackMoves: Array<Position> = currentPiece.getCaptureMoves(position, board)
     setValidMoves(moves)
+    setAttackMoves(attackMoves)
 
   }
 
@@ -113,6 +109,7 @@ export default function VisualBoard() {
 
                 const isSelected: boolean = rowIndex === selectedPosition?.row && colIndex === selectedPosition?.col
                 const isValidMoveForSelectedPiece: boolean = validMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                const isAttackMoveForSelectedPiece: boolean = attackMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
                 return (
                   <div 
                     key={rowIndex+colIndex} 
@@ -123,7 +120,7 @@ export default function VisualBoard() {
                         ${((rowIndex + colIndex)%2 === 0) ? "bg-gray-300" : "bg-blue-300"}
                         ${isSelected ? "bg-lime-600" : ""}
                         ${isValidMoveForSelectedPiece ? "bg-lime-400 opacity-50" : ""}
-                        ${isValidMoveForSelectedPiece}
+                        ${isAttackMoveForSelectedPiece ? "bg-red-300" : ""}
                       `}
                     onClick={() => handleSquareClicked(rowIndex, colIndex)}
                   >

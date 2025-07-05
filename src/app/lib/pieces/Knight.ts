@@ -25,4 +25,8 @@ export default class Knight implements Piece {
 
     return validMoves
   }
+  
+  getCaptureMoves(): Array<Position> {
+    return []
+  }
 }

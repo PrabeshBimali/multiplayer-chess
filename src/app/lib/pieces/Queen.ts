@@ -24,4 +24,8 @@ export default class Queen implements Piece {
 
     return validMoves
   }
+  
+  getCaptureMoves(): Array<Position> {
+    return []
+  }
 }

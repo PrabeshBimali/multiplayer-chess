@@ -22,10 +22,16 @@ export default class Game {
 
     const fromPosition: number = this.positionToBitBoardIndex(from.row, from.col)
     const toPosition: number = this.positionToBitBoardIndex(to.row, to.col)
+    console.log(piece)
 
     switch(piece) {
       case PieceType.PAWN:
         this.bitboard.moveWhitePawn(fromPosition, toPosition)
+        break
+      
+      case PieceType.ROOK:
+        this.bitboard.moveWhiteRook(fromPosition, toPosition)
+        break
     } 
     this.turn = PieceColor.BLACK
     this.fen = this.bitboard.generateFENFromBitBoard()
@@ -42,6 +48,11 @@ export default class Game {
     switch(piece) {
       case PieceType.PAWN:
         this.bitboard.moveBlackPawn(fromPosition, toPosition)
+        break
+      
+      case PieceType.ROOK:
+        this.bitboard.moveBlackRook(fromPosition, toPosition)
+        break
     } 
     this.turn = PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()

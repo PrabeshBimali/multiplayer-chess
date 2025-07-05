@@ -168,7 +168,7 @@ export default class BitBoard {
     const captureRight = u64_shl(u64_and(fromMask, notHFile), 7n) === toMask && u64_and(blackPieces, toMask) !== 0n;
 
     const isLegal = singlePush || doublePush || captureLeft || captureRight;
-    if (!isLegal) throw new Error("Illegal move");
+    if (!isLegal) throw new Error("Illegal Pawn move");
 
     // Move the pawn
     whitePawns = u64_and(whitePawns, u64_not(fromMask));
@@ -208,7 +208,7 @@ export default class BitBoard {
     const captureRight = u64_shr(u64_and(fromMask, notHFile), 9n) === toMask && u64_and(whitePieces, toMask) !== 0n;
 
     const isLegal = singlePush || doublePush || captureLeft || captureRight;
-    if (!isLegal) throw new Error("Illegal move");
+    if (!isLegal) throw new Error("Illegal Pawn move");
 
     // Move the pawn
     blackPawns = u64_and(blackPawns, u64_not(fromMask));
@@ -219,6 +219,96 @@ export default class BitBoard {
     if (captureLeft || captureRight) {
       this.removeWhitePiece(to)
     }
+  }
 
+  private generateRookMoves(from: number, occupied: bigint, friendly: bigint): bigint {
+    const directions = [+1, -1, +8, -8]; // E, W, N, S
+    let moves = 0n;
+
+    for (const dir of directions) {
+      let pos = from;
+
+      while (true) {
+        pos += dir;
+
+        // Edge check
+        if (pos < 0 || pos > 63) break;
+
+        // File edge check (to prevent wraparound)
+        if (dir === +1 && pos % 8 === 0) break; // wrapped from h to a
+        if (dir === -1 && (pos + 1) % 8 === 0) break; // wrapped from a to h
+
+        const mask = 1n << BigInt(pos);
+
+        if ((friendly & mask) !== 0n) break; // blocked by own piece
+        moves |= mask;
+
+        if ((occupied & mask) !== 0n) break; // blocked by enemy piece (capture allowed but stop)
+      }
+    }
+
+    return moves;
+  }
+
+  moveWhiteRook(from: number, to: number) {
+    const fromMask = 1n << BigInt(from);
+    const toMask = 1n << BigInt(to);
+    let whiteRooks: bigint = this.piecesPosition[BitboardIndex.WhiteRooks]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a rook at `from`
+    if ((whiteRooks & fromMask) === 0n) {
+      throw new Error("No White Rook at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const rookMoves = this.generateRookMoves(from, occupied, whitePieces);
+
+    if ((rookMoves & toMask) === 0n) {
+      throw new Error("Illegal Rook move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if ((blackPieces & toMask) !== 0n) {
+      this.removeBlackPiece(to);
+    }
+
+    // 4. Update rook position
+    whiteRooks &= ~fromMask;
+    whiteRooks |= toMask;
+    this.piecesPosition[BitboardIndex.WhiteRooks] = whiteRooks
+  }
+  
+  moveBlackRook(from: number, to: number) {
+    const fromMask = 1n << BigInt(from);
+    const toMask = 1n << BigInt(to);
+    let blackRooks: bigint = this.piecesPosition[BitboardIndex.BlackRooks]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a rook at `from`
+    if ((blackRooks & fromMask) === 0n) {
+      throw new Error("No Black Rook at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const rookMoves = this.generateRookMoves(from, occupied, blackPieces);
+
+    if ((rookMoves & toMask) === 0n) {
+      throw new Error("Illegal Rook move");
+    }
+
+    // 3. If capturing, remove white piece from correct board
+    if ((whitePieces & toMask) !== 0n) {
+      this.removeWhitePiece(to);
+    }
+
+    // 4. Update rook position
+    blackRooks &= ~fromMask;
+    blackRooks |= toMask;
+    this.piecesPosition[BitboardIndex.BlackRooks] = blackRooks
   }
 }

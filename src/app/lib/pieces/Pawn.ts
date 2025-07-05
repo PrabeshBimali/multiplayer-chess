@@ -40,4 +40,23 @@ export default class Pawn implements Piece {
 
     return validMoves
   }
+  
+  getCaptureMoves(pos: Position, board: FrontendBoard): Array<Position> {
+     const captures: Position[] = [];
+    const direction = this.color === PieceColor.WHITE ? -1 : 1;
+    const { row, col } = pos;
+    const nextRow = row + direction;
+
+    for (const dCol of [-1, 1]) {
+      const targetCol = col + dCol;
+      if (!isPositionOutOfBound({row: nextRow, col: targetCol})) {
+        const target = board[nextRow][targetCol];
+        if (target && target.getColor() !== this.color) {
+          captures.push({ row: nextRow, col: targetCol });
+        }
+      }
+    }
+
+    return captures;
+  }
 }

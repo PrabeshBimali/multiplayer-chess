@@ -5,4 +5,5 @@ export interface Piece {
   getColor: () => PieceColor,
   getType: () => PieceType,
   getValidMoves: (piecePos: Position, board: FrontendBoard) => Array<Position>
+  getCaptureMoves: (piecePos: Position, board: FrontendBoard) => Array<Position>
 }

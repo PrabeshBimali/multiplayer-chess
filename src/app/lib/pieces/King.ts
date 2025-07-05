@@ -25,4 +25,8 @@ export default class king implements Piece {
 
     return validMoves
   }
+
+  getCaptureMoves(): Array<Position> {
+    return []
+  }
 }

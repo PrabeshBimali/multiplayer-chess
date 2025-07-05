@@ -24,4 +24,8 @@ export default class Bishop implements Piece {
 
     return validMoves
   }
+  
+  getCaptureMoves(): Array<Position> {
+    return []
+  }
 }
