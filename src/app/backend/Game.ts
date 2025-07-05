@@ -32,6 +32,17 @@ export default class Game {
       case PieceType.ROOK:
         this.bitboard.moveWhiteRook(fromPosition, toPosition)
         break
+
+      case PieceType.BISHOP:
+        this.bitboard.moveWhiteBishop(fromPosition, toPosition)
+        break
+
+      case PieceType.QUEEN:
+        this.bitboard.moveWhiteQueen(fromPosition, toPosition)
+        break
+       
+      default:
+        throw new Error("Piece not recognized")
     } 
     this.turn = PieceColor.BLACK
     this.fen = this.bitboard.generateFENFromBitBoard()
@@ -53,6 +64,17 @@ export default class Game {
       case PieceType.ROOK:
         this.bitboard.moveBlackRook(fromPosition, toPosition)
         break
+
+      case PieceType.BISHOP:
+        this.bitboard.moveBlackBishop(fromPosition, toPosition)
+        break
+      
+      case PieceType.QUEEN:
+        this.bitboard.moveBlackQueen(fromPosition, toPosition)
+        break
+       
+      default:
+        throw new Error("Piece not recognized")
     } 
     this.turn = PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()

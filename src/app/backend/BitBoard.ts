@@ -143,12 +143,22 @@ export default class BitBoard {
   }
 
   moveWhitePawn(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
     const fromMask: bigint = u64_shl(1n, BigInt(from));
     const toMask: bigint = u64_shl(1n, BigInt(to));
     const emptySquares: bigint = this.emptySquares()
     let whitePawns: bigint = this.piecesPosition[BitboardIndex.WhitePawns]
     const blackPieces: bigint = this.blackOccupiedSquares()
     
+
     if (u64_and(whitePawns, fromMask) === 0n) {
       throw new Error("No white pawn at source square");
     }
@@ -182,6 +192,15 @@ export default class BitBoard {
   }
 
   moveBlackPawn(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
     const fromMask: bigint = u64_shl(1n, BigInt(from));
     const toMask: bigint = u64_shl(1n, BigInt(to));
     const emptySquares: bigint = this.emptySquares()
@@ -238,12 +257,12 @@ export default class BitBoard {
         if (dir === +1 && pos % 8 === 0) break; // wrapped from h to a
         if (dir === -1 && (pos + 1) % 8 === 0) break; // wrapped from a to h
 
-        const mask = 1n << BigInt(pos);
+        const mask = u64_shl(1n, BigInt(pos));
 
-        if ((friendly & mask) !== 0n) break; // blocked by own piece
+        if (u64_and(friendly, mask) !== 0n) break; // blocked by own piece
         moves |= mask;
 
-        if ((occupied & mask) !== 0n) break; // blocked by enemy piece (capture allowed but stop)
+        if (u64_and(occupied, mask) !== 0n) break; // blocked by enemy piece (capture allowed but stop)
       }
     }
 
@@ -251,64 +270,288 @@ export default class BitBoard {
   }
 
   moveWhiteRook(from: number, to: number) {
-    const fromMask = 1n << BigInt(from);
-    const toMask = 1n << BigInt(to);
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
     let whiteRooks: bigint = this.piecesPosition[BitboardIndex.WhiteRooks]
     const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a rook at `from`
-    if ((whiteRooks & fromMask) === 0n) {
+    if (u64_and(whiteRooks, fromMask) === 0n) {
       throw new Error("No White Rook at source square");
     }
 
     // 2. Check if `to` is reachable
     const rookMoves = this.generateRookMoves(from, occupied, whitePieces);
 
-    if ((rookMoves & toMask) === 0n) {
+    if (u64_and(rookMoves, toMask) === 0n) {
       throw new Error("Illegal Rook move");
     }
 
     // 3. If capturing, remove black piece from correct board
-    if ((blackPieces & toMask) !== 0n) {
+    if (u64_and(blackPieces, toMask) !== 0n) {
       this.removeBlackPiece(to);
     }
 
     // 4. Update rook position
-    whiteRooks &= ~fromMask;
-    whiteRooks |= toMask;
+    whiteRooks = u64_and(whiteRooks, u64_not(fromMask));
+    whiteRooks = u64_or(whiteRooks, toMask);
     this.piecesPosition[BitboardIndex.WhiteRooks] = whiteRooks
   }
   
   moveBlackRook(from: number, to: number) {
-    const fromMask = 1n << BigInt(from);
-    const toMask = 1n << BigInt(to);
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
     let blackRooks: bigint = this.piecesPosition[BitboardIndex.BlackRooks]
     const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a rook at `from`
-    if ((blackRooks & fromMask) === 0n) {
+    if (u64_and(blackRooks, fromMask) === 0n) {
       throw new Error("No Black Rook at source square");
     }
 
     // 2. Check if `to` is reachable
     const rookMoves = this.generateRookMoves(from, occupied, blackPieces);
 
-    if ((rookMoves & toMask) === 0n) {
+    if (u64_and(rookMoves, toMask) === 0n) {
       throw new Error("Illegal Rook move");
     }
 
     // 3. If capturing, remove white piece from correct board
-    if ((whitePieces & toMask) !== 0n) {
+    if (u64_and(whitePieces, toMask) !== 0n) {
       this.removeWhitePiece(to);
     }
 
     // 4. Update rook position
-    blackRooks &= ~fromMask;
-    blackRooks |= toMask;
+    blackRooks = u64_and(blackRooks, u64_not(fromMask));
+    blackRooks = u64_or(blackRooks, toMask);
     this.piecesPosition[BitboardIndex.BlackRooks] = blackRooks
   }
+
+  private wrapsAround(from: number, to: number):  boolean {
+    const fromFile = from % 8;
+    const toFile = to % 8;
+    const diff = Math.abs(fromFile - toFile);
+
+    // returns true when move is valid diagonal move
+    return diff !== 1;
+  }
+
+  private generateBishopMoves(from: number, occupied: bigint, friendly: bigint): bigint {
+
+    const directions = [+7, +9, -7, -9]; // NW, NE, SE, SW
+    let moves = 0n;
+
+    for (const dir of directions) {
+      let pos = from;
+
+      while (true) {
+        const prev = pos
+        pos += dir;
+
+        // Stop if off-board
+        if (pos < 0 || pos > 63) break;
+
+        // Prevent wraparound at edges
+        if (this.wrapsAround(prev, pos)) break;
+
+        const mask = u64_shl(1n, BigInt(pos));
+
+        if (u64_and(friendly, mask) !== 0n) break; // blocked by own piece
+        moves |= mask;
+
+        if (u64_and(occupied, mask) !== 0n) break; // blocked by enemy
+      }
+    }
+
+    return moves;
+  }
+
+  moveWhiteBishop(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let whiteBishops: bigint = this.piecesPosition[BitboardIndex.WhiteBishops]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Bishop at `from`
+    if (u64_and(whiteBishops, fromMask) === 0n) {
+      throw new Error("No White Bishop at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const bishopMoves = this.generateBishopMoves(from, occupied, whitePieces);
+
+    if (u64_and(bishopMoves, toMask) === 0n) {
+      throw new Error("Illegal Bishop move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(blackPieces, toMask) !== 0n) {
+      this.removeBlackPiece(to);
+    }
+
+    // 4. Update Bishop position
+    whiteBishops = u64_and(whiteBishops, u64_not(fromMask));
+    whiteBishops = u64_or(whiteBishops, toMask);
+    this.piecesPosition[BitboardIndex.WhiteBishops] = whiteBishops
+  }
+  
+  moveBlackBishop(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let blackBishops: bigint = this.piecesPosition[BitboardIndex.BlackBishops]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Bishop at `from`
+    if (u64_and(blackBishops, fromMask) === 0n) {
+      throw new Error("No White Bishop at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const bishopMoves = this.generateBishopMoves(from, occupied, blackPieces);
+
+    if (u64_and(bishopMoves, toMask) === 0n) {
+      throw new Error("Illegal Bishop move");
+    }
+
+    // 3. If capturing, remove white piece from correct board
+    if (u64_and(whitePieces, toMask) !== 0n) {
+      this.removeWhitePiece(to);
+    }
+
+    // 4. Update Bishop position
+    blackBishops = u64_and(u64_not(fromMask));
+    blackBishops = u64_or(blackBishops, toMask);
+    this.piecesPosition[BitboardIndex.BlackBishops] = blackBishops
+  }
+
+  private generateQueenMoves(from: number, occupied: bigint, friendly: bigint): bigint {
+    const diagonalMoves = this.generateBishopMoves(from, occupied, friendly);
+    const linearMoves = this.generateRookMoves(from, occupied, friendly)
+    return u64_or(diagonalMoves, linearMoves)
+  }
+  
+  moveWhiteQueen(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let whiteQueen: bigint = this.piecesPosition[BitboardIndex.WhiteQueen]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Queen at `from`
+    if (u64_and(whiteQueen, fromMask) === 0n) {
+      throw new Error("No White Queen at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const queenMoves = this.generateQueenMoves(from, occupied, whitePieces);
+
+    if (u64_and(queenMoves, toMask) === 0n) {
+      throw new Error("Illegal Queen move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(blackPieces, toMask) !== 0n) {
+      this.removeBlackPiece(to);
+    }
+
+    // 4. Update Queen position
+    whiteQueen = u64_and(whiteQueen, u64_not(fromMask));
+    whiteQueen = u64_or(whiteQueen, toMask);
+    this.piecesPosition[BitboardIndex.WhiteQueen] = whiteQueen
+  }
+  
+  moveBlackQueen(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let blackQueen: bigint = this.piecesPosition[BitboardIndex.BlackQueen]
+    const occupied: bigint = this.occupiedSquares()
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Queen at `from`
+    if (u64_and(blackQueen, fromMask) === 0n) {
+      throw new Error("No Black Queen at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const queenMoves = this.generateQueenMoves(from, occupied, blackPieces);
+
+    if (u64_and(queenMoves, toMask) === 0n) {
+      throw new Error("Illegal Queen move");
+    }
+
+    // 3. If capturing, remove white piece from correct board
+    if (u64_and(whitePieces, toMask) !== 0n) {
+      this.removeWhitePiece(to);
+    }
+
+    // 4. Update Queen position
+    blackQueen = u64_and(blackQueen, u64_not(fromMask));
+    blackQueen = u64_or(blackQueen, toMask);
+    this.piecesPosition[BitboardIndex.BlackQueen] = blackQueen
+  }
+
 }
