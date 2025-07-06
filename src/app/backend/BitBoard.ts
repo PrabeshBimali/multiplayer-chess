@@ -555,7 +555,7 @@ export default class BitBoard {
   }
 
   generateKnightMoves(from: number, friendly: bigint): bigint {
-    const fromMask = 1n << BigInt(from);
+    const fromMask = u64_shl(1n, BigInt(from));
 
     const notHFile = 0xFEFEFEFEFEFEFEFEn;
     const notGHFile = 0xFCFCFCFCFCFCFCFCn;
@@ -565,28 +565,45 @@ export default class BitBoard {
     let moves = 0n;
 
     // ↑↑→ NNE
-    if ((fromMask & notAFile) !== 0n) moves |= fromMask << 17n;
+    if (u64_and(fromMask, notAFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 17n));
+    }
 
     // ↑↑← NNW
-    if ((fromMask & notHFile) !== 0n) moves |= fromMask << 15n;
+    if (u64_and(fromMask, notHFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 15n));
+    }
 
     // ↑→→ ENE
-    if ((fromMask & notABFile) !== 0n) moves |= fromMask << 10n;
+    if (u64_and(fromMask, notABFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 10n));
+    }
 
     // ↑←← WNW
-    if ((fromMask & notGHFile) !== 0n) moves |= fromMask << 6n;
+    if (u64_and(fromMask, notGHFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 6n));
+    }
 
     // ↓→→ ESE
-    if ((fromMask & notABFile) !== 0n) moves |= fromMask >> 6n;
+    if (u64_and(fromMask, notABFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 6n));
+    }
 
     // ↓←← WSW
-    if ((fromMask & notGHFile) !== 0n) moves |= fromMask >> 10n;
+    if (u64_and(fromMask, notGHFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 10n));
+    }
 
     // ↓↓→ SSE
-    if ((fromMask & notAFile) !== 0n) moves |= fromMask >> 15n;
+    if (u64_and(fromMask & notAFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 15n));
+    }
 
     // ↓↓← SSW
-    if ((fromMask & notHFile) !== 0n) moves |= fromMask >> 17n;
+    if (u64_and(fromMask & notHFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 17n));
+    }
+
     // Filter out friendly pieces
     moves &= ~friendly;
     console.log(moves)
@@ -670,6 +687,118 @@ export default class BitBoard {
     blackKnights = u64_and(blackKnights, u64_not(fromMask));
     blackKnights = u64_or(blackKnights, toMask);
     this.piecesPosition[BitboardIndex.BlackKnights] = blackKnights
+  }
+
+  private generateKingMoves(from: number, friendly: bigint): bigint {
+    const notHFile = 0xFEFEFEFEFEFEFEFEn;
+    const notAFile = 0x7F7F7F7F7F7F7F7Fn;
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    let moves = 0n;
+
+    // horizontal/vertical
+    if (u64_and(fromMask, notHFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 1n));
+    }
+
+    if (u64_and(fromMask, notAFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 1n));
+    }
+
+    moves = u64_or(moves, u64_shr(fromMask, 8n));
+    moves = u64_or(moves, u64_shl(fromMask, 8n));
+
+    // diagonals
+    if (u64_and(fromMask, notHFile) !== 0n) {
+      moves = u64_or(moves, u64_shr(fromMask, 9n));
+      moves = u64_or(moves, u64_shl(fromMask, 7n));
+    }
+
+    if (u64_and(fromMask, notAFile) !== 0n) {
+      moves = u64_or(moves, u64_shl(fromMask, 9n));
+      moves = u64_or(moves, u64_shr(fromMask, 7n));
+    }
+
+    // remove friendly collisions
+    return u64_and(moves, u64_not(friendly));
+  }
+
+  moveWhiteKing(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let whiteKing: bigint = this.piecesPosition[BitboardIndex.WhiteKing]
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a King at `from`
+    if (u64_and(whiteKing, fromMask) === 0n) {
+      throw new Error("No White King at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const kingMoves = this.generateKingMoves(from, whitePieces);
+
+    if (u64_and(kingMoves, toMask) === 0n) {
+      throw new Error("Illegal King move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(blackPieces, toMask) !== 0n) {
+      this.removeBlackPiece(to);
+    }
+
+    // 4. Update King position
+    whiteKing = u64_and(whiteKing, u64_not(fromMask));
+    whiteKing = u64_or(whiteKing, toMask);
+    this.piecesPosition[BitboardIndex.WhiteKing] = whiteKing
+  }
+  
+  moveBlackKing(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let blackKing: bigint = this.piecesPosition[BitboardIndex.BlackKing]
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a King at `from`
+    if (u64_and(blackKing, fromMask) === 0n) {
+      throw new Error("No Black King at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const kingMoves = this.generateKingMoves(from, blackPieces);
+
+    if (u64_and(kingMoves, toMask) === 0n) {
+      throw new Error("Illegal King move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(whitePieces, toMask) !== 0n) {
+      this.removeWhitePiece(to);
+    }
+
+    // 4. Update King position
+    blackKing = u64_and(blackKing, u64_not(fromMask));
+    blackKing = u64_or(blackKing, toMask);
+    this.piecesPosition[BitboardIndex.BlackKing] = blackKing
   }
 
 }

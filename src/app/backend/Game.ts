@@ -44,6 +44,10 @@ export default class Game {
       case PieceType.KNIGHT:
         this.bitboard.moveWhiteKnight(fromPosition, toPosition)
         break
+      
+      case PieceType.KING:
+        this.bitboard.moveWhiteKing(fromPosition, toPosition)
+        break
        
       default:
         throw new Error("Piece not recognized")
@@ -79,6 +83,10 @@ export default class Game {
 
       case PieceType.KNIGHT:
         this.bitboard.moveBlackKnight(fromPosition, toPosition)
+        break
+
+      case PieceType.KING:
+        this.bitboard.moveBlackKing(fromPosition, toPosition)
         break
        
       default:
