@@ -463,7 +463,7 @@ export default class BitBoard {
     }
 
     // 4. Update Bishop position
-    blackBishops = u64_and(u64_not(fromMask));
+    blackBishops = u64_and(blackBishops, u64_not(fromMask));
     blackBishops = u64_or(blackBishops, toMask);
     this.piecesPosition[BitboardIndex.BlackBishops] = blackBishops
   }
@@ -552,6 +552,124 @@ export default class BitBoard {
     blackQueen = u64_and(blackQueen, u64_not(fromMask));
     blackQueen = u64_or(blackQueen, toMask);
     this.piecesPosition[BitboardIndex.BlackQueen] = blackQueen
+  }
+
+  generateKnightMoves(from: number, friendly: bigint): bigint {
+    const fromMask = 1n << BigInt(from);
+
+    const notHFile = 0xFEFEFEFEFEFEFEFEn;
+    const notGHFile = 0xFCFCFCFCFCFCFCFCn;
+    const notAFile = 0x7F7F7F7F7F7F7F7Fn;
+    const notABFile = 0x3F3F3F3F3F3F3F3Fn;
+
+    let moves = 0n;
+
+    // ↑↑→ NNE
+    if ((fromMask & notAFile) !== 0n) moves |= fromMask << 17n;
+
+    // ↑↑← NNW
+    if ((fromMask & notHFile) !== 0n) moves |= fromMask << 15n;
+
+    // ↑→→ ENE
+    if ((fromMask & notABFile) !== 0n) moves |= fromMask << 10n;
+
+    // ↑←← WNW
+    if ((fromMask & notGHFile) !== 0n) moves |= fromMask << 6n;
+
+    // ↓→→ ESE
+    if ((fromMask & notABFile) !== 0n) moves |= fromMask >> 6n;
+
+    // ↓←← WSW
+    if ((fromMask & notGHFile) !== 0n) moves |= fromMask >> 10n;
+
+    // ↓↓→ SSE
+    if ((fromMask & notAFile) !== 0n) moves |= fromMask >> 15n;
+
+    // ↓↓← SSW
+    if ((fromMask & notHFile) !== 0n) moves |= fromMask >> 17n;
+    // Filter out friendly pieces
+    moves &= ~friendly;
+    console.log(moves)
+    return moves;
+
+  }
+
+  moveWhiteKnight(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let whiteKnights: bigint = this.piecesPosition[BitboardIndex.WhiteKnights]
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Knight at `from`
+    if (u64_and(whiteKnights, fromMask) === 0n) {
+      throw new Error("No White Knight at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const knightMoves = this.generateKnightMoves(from, whitePieces);
+
+    if (u64_and(knightMoves, toMask) === 0n) {
+      throw new Error("Illegal Knight move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(blackPieces, toMask) !== 0n) {
+      this.removeBlackPiece(to);
+    }
+
+    // 4. Update Knight position
+    whiteKnights = u64_and(whiteKnights, u64_not(fromMask));
+    whiteKnights = u64_or(whiteKnights, toMask);
+    this.piecesPosition[BitboardIndex.WhiteKnights] = whiteKnights
+  }
+  
+  moveBlackKnight(from: number, to: number) {
+
+    if(from === to) {
+      throw new Error("Cannot move to same square")
+    }
+    
+    if(to < 0 && to > 63) {
+      throw new Error("Illegal Move")
+    }
+
+    const fromMask = u64_shl(1n, BigInt(from));
+    const toMask = u64_shl(1n, BigInt(to));
+    let blackKnights: bigint = this.piecesPosition[BitboardIndex.BlackKnights]
+    const whitePieces: bigint = this.whiteOccupiedSquares()
+    const blackPieces: bigint = this.blackOccupiedSquares()
+
+    // 1. Check there's a Knight at `from`
+    if (u64_and(blackKnights, fromMask) === 0n) {
+      throw new Error("No White Knight at source square");
+    }
+
+    // 2. Check if `to` is reachable
+    const knightMoves = this.generateKnightMoves(from, blackPieces);
+
+    if (u64_and(knightMoves, toMask) === 0n) {
+      throw new Error("Illegal Knight move");
+    }
+
+    // 3. If capturing, remove black piece from correct board
+    if (u64_and(whitePieces, toMask) !== 0n) {
+      this.removeWhitePiece(to);
+    }
+
+    // 4. Update Knight position
+    blackKnights = u64_and(blackKnights, u64_not(fromMask));
+    blackKnights = u64_or(blackKnights, toMask);
+    this.piecesPosition[BitboardIndex.BlackKnights] = blackKnights
   }
 
 }
