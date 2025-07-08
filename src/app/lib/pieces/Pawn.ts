@@ -26,9 +26,11 @@ export default class Pawn implements Piece {
 
     let newPos: Position = {row: piecePos.row + direction, col: piecePos.col}
     
-    if (!isPositionOutOfBound(newPos) && !doesPossitionContainPiece(newPos, board)) {
-      validMoves.push(newPos)
+    if (isPositionOutOfBound(newPos) || doesPossitionContainPiece(newPos, board)) {
+      return []
     }
+    
+    validMoves.push(newPos)
 
     newPos = {row: piecePos.row + (direction * 2), col: piecePos.col}
 

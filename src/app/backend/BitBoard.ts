@@ -205,7 +205,6 @@ export default class BitBoard {
     // for capture
     if(color === PieceColor.WHITE) {
       mask = u64_shl(piecePosition, 9n)
-      console.log("WHITE MASK: ", mask.toString(16))
       if(u64_and(piecePosition, notAFile) !== 0n && u64_and(mask, enemy) !== 0n) {
         moves = u64_or(moves, mask)
       }
@@ -217,9 +216,7 @@ export default class BitBoard {
     } 
     else {
       mask = u64_shr(piecePosition, 9n)
-      console.log("MASK: ", mask.toString(16))
       if(u64_and(mask, enemy) !== 0n) {
-        console.log("Running")
         moves = u64_or(moves, mask)
       }
 
@@ -229,7 +226,6 @@ export default class BitBoard {
       }
 
     }
-    console.log("Pawn Moves: ", moves.toString(16))
     return moves
   }
   
@@ -687,7 +683,6 @@ export default class BitBoard {
 
     // Filter out friendly pieces
     moves &= ~friendly;
-    console.log(moves)
     return moves;
 
   }
@@ -769,6 +764,21 @@ export default class BitBoard {
     blackKnights = u64_or(blackKnights, toMask);
     this.piecesPosition[BitboardIndex.BlackKnights] = blackKnights
   }
+  
+  private generateAllPawnAttacks(color: PieceColor): bigint {
+    const pawns: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhitePawns] : this.piecesPosition[BitboardIndex.BlackPawns];
+    const enemy: bigint = color === PieceColor.WHITE ?  this.blackOccupiedSquares() : this.whiteOccupiedSquares()
+    const occupied: bigint = this.occupiedSquares()
+    let attacks: bigint = 0n
+
+    const indices: Array<number> = this.bitScan(pawns)
+
+    for (const idx of indices) {
+      attacks = u64_or(attacks, this.generatePawnMoves(idx, color, occupied, enemy))
+    }
+
+    return attacks
+  }
 
   private generateAllRookAttacks(color: PieceColor): bigint {
     const rooks: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteRooks] : this.piecesPosition[BitboardIndex.BlackRooks];
@@ -786,7 +796,7 @@ export default class BitBoard {
   }
   
   private generateAllBishopAttacks(color: PieceColor): bigint {
-    const bishops: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteBishops] : this.piecesPosition[BitboardIndex.BlackKnights];
+    const bishops: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteBishops] : this.piecesPosition[BitboardIndex.BlackBishops];
     const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
     const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
@@ -814,7 +824,7 @@ export default class BitBoard {
   }
   
   private generateAllQueenAttacks(color: PieceColor): bigint {
-    const queens: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteQueen] : this.piecesPosition[BitboardIndex.WhiteQueen];
+    const queens: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteQueen] : this.piecesPosition[BitboardIndex.BlackQueen];
     const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
     const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
@@ -827,7 +837,20 @@ export default class BitBoard {
     return attacks
   }
 
-  private generateKingMoves(from: number, friendly: bigint): bigint {
+  private generateAllKingAttacks(color: PieceColor): bigint {
+    const king: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteKing] : this.piecesPosition[BitboardIndex.BlackKing];
+    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
+    let attacks: bigint = 0n
+
+    const indices: Array<number> = this.bitScan(king)
+
+    for (const idx of indices) {
+      attacks = u64_or(attacks, this.generateKingAttacks(idx, friendly))
+    }
+    return attacks
+  }
+
+  private generateKingAttacks(from: number, friendly: bigint): bigint {
     const notHFile = 0xFEFEFEFEFEFEFEFEn;
     const notAFile = 0x7F7F7F7F7F7F7F7Fn;
 
@@ -861,6 +884,104 @@ export default class BitBoard {
     return u64_and(moves, u64_not(friendly));
   }
 
+  private isSquareAttacked(square: number, byColor: PieceColor): boolean {
+    const squareMask = u64_shl(1n, BigInt(square))
+
+    const pawnAttacks = this.generateAllPawnAttacks(byColor)
+    if(u64_and(pawnAttacks, squareMask) !== 0n) return true
+    
+    const rookAttacks = this.generateAllRookAttacks(byColor)
+    if(u64_and(rookAttacks, squareMask) !== 0n) return true
+
+    const bishopAttacks = this.generateAllBishopAttacks(byColor)
+    if(u64_and(bishopAttacks, squareMask) !== 0n) return true
+
+    const knightAttacks = this.generateAllKnightAttacks(byColor)
+    if(u64_and(knightAttacks, squareMask) !== 0n) return true
+
+    const queenAttacks = this.generateAllQueenAttacks(byColor)
+    if(u64_and(queenAttacks, squareMask) !== 0n) return true
+
+    const kingAttacks = this.generateAllKingAttacks(byColor)
+    if(u64_and(kingAttacks, squareMask) !== 0n) return true
+
+    return false
+  }
+
+  private canWhiteCastleKingSide(): boolean {
+    const occupiedSquares = this.occupiedSquares()
+    if(this.whiteKingMoved || this.whiteRookH1MovedOrCaptured) return false
+
+    const g1 = 1, f1 = 2, e1 = 3
+
+    const emptyMask = u64_or(u64_shl(1n, 1n), u64_shl(1n, 2n))
+    if(u64_and(emptyMask, occupiedSquares) !== 0n) return false
+    
+    if(this.isSquareAttacked(e1, PieceColor.BLACK) || 
+        this.isSquareAttacked(f1, PieceColor.BLACK) || 
+        this.isSquareAttacked(g1, PieceColor.BLACK)) {
+
+          return false
+    }
+    return true
+  }
+  
+  private canWhiteCastleQueenSide(): boolean {
+    const occupiedSquares = this.occupiedSquares()
+    if(this.whiteKingMoved || this.whiteRookA1MovedOrCaptured) return false
+
+    const e1 = 3, d1 = 4, c1 = 5, b1 = 6
+
+    const emptyMask = u64_or(u64_shl(1n, 4n), u64_shl(1n, 5n), u64_shl(1n, 6n))
+    if(u64_and(emptyMask, occupiedSquares) !== 0n) return false
+    
+    if(this.isSquareAttacked(e1, PieceColor.BLACK) || 
+        this.isSquareAttacked(d1, PieceColor.BLACK) || 
+          this.isSquareAttacked(c1, PieceColor.BLACK) ||
+            this.isSquareAttacked(b1, PieceColor.BLACK)) {
+
+              return false
+    }
+    return true
+  }
+
+  private canBlackCastleKingSide(): boolean {
+    const occupiedSquares = this.occupiedSquares()
+    if(this.blackKingMoved || this.blackRookH8MovedOrCaptured) return false
+
+    const g8 = 57, f8 = 58, e8 = 59
+
+    const emptyMask = u64_or(u64_shl(1n, 57n), u64_shl(1n, 58n))
+    if(u64_and(emptyMask, occupiedSquares) !== 0n) return false
+    
+    if(this.isSquareAttacked(e8, PieceColor.WHITE) || 
+        this.isSquareAttacked(f8, PieceColor.WHITE) || 
+        this.isSquareAttacked(g8, PieceColor.WHITE)) {
+
+          return false
+    }
+    return true
+  }
+  
+  private canBlackCastleQueenSide(): boolean {
+    const occupiedSquares = this.occupiedSquares()
+    if(this.blackKingMoved || this.blackRookA8MovedOrCaptured) return false
+
+    const e8 = 59, d8 = 60, c8 = 61, b8 = 62
+
+    const emptyMask = u64_or(u64_shl(1n, 60n), u64_shl(1n, 61n), u64_shl(1n, 62n))
+    if(u64_and(emptyMask, occupiedSquares) !== 0n) return false
+    
+    if(this.isSquareAttacked(e8, PieceColor.WHITE) || 
+        this.isSquareAttacked(d8, PieceColor.WHITE) || 
+          this.isSquareAttacked(c8, PieceColor.WHITE) ||
+            this.isSquareAttacked(b8, PieceColor.WHITE)) {
+
+              return false
+    }
+    return true
+  }
+
   moveWhiteKing(from: number, to: number) {
 
     if(from === to) {
@@ -874,6 +995,7 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whiteKing: bigint = this.piecesPosition[BitboardIndex.WhiteKing]
+    let whiteRooks = this.piecesPosition[BitboardIndex.WhiteRooks] // for castling
     const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
@@ -882,8 +1004,25 @@ export default class BitBoard {
       throw new Error("No White King at source square");
     }
 
+    // First do castling moves
+    if((this.canWhiteCastleKingSide() && to === 1) || (this.canWhiteCastleQueenSide() && to === 5)) {
+      const kingToMask = u64_shl(1n, BigInt(to))
+      const kingFromMask = u64_shl(1n, BigInt(from))
+      whiteKing = u64_and(whiteKing, u64_not(kingFromMask))
+      whiteKing = u64_or(whiteKing, kingToMask)
+      this.piecesPosition[BitboardIndex.WhiteKing] = whiteKing
+
+      const rookTo = to === 1 ? to + 1 : to - 1
+      const rookFromMask = to === 1 ? 1n : u64_shl(1n, 7n)
+      const rookToMask = u64_shl(1n, BigInt(rookTo))
+      whiteRooks = u64_and(whiteRooks, u64_not(rookFromMask))
+      whiteRooks = u64_or(whiteRooks, rookToMask)
+      this.piecesPosition[BitboardIndex.WhiteRooks] = whiteRooks
+      return
+    }
+
     // 2. Check if `to` is reachable
-    const kingMoves = this.generateKingMoves(from, whitePieces);
+    const kingMoves = this.generateKingAttacks(from, whitePieces);
 
     if (u64_and(kingMoves, toMask) === 0n) {
       throw new Error("Illegal King move");
@@ -915,6 +1054,7 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackKing: bigint = this.piecesPosition[BitboardIndex.BlackKing]
+    let blackRooks: bigint = this.piecesPosition[BitboardIndex.BlackRooks]
     const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
@@ -922,9 +1062,26 @@ export default class BitBoard {
     if (u64_and(blackKing, fromMask) === 0n) {
       throw new Error("No Black King at source square");
     }
+    
+    // First do castling moves
+    if((this.canBlackCastleKingSide() && to === 57) || (this.canBlackCastleQueenSide() && to === 61)) {
+      const kingToMask = u64_shl(1n, BigInt(to))
+      const kingFromMask = u64_shl(1n, BigInt(from))
+      blackKing = u64_and(blackKing, u64_not(kingFromMask))
+      blackKing = u64_or(blackKing, kingToMask)
+      this.piecesPosition[BitboardIndex.BlackKing] = blackKing
+
+      const rookTo = to === 57 ? to + 1 : to - 1
+      const rookFromMask = to === 57 ? u64_shl(1n, 56n) : u64_shl(1n, 63n)
+      const rookToMask = u64_shl(1n, BigInt(rookTo))
+      blackRooks = u64_and(blackRooks, u64_not(rookFromMask))
+      blackRooks = u64_or(blackRooks, rookToMask)
+      this.piecesPosition[BitboardIndex.BlackRooks] = blackRooks
+      return
+    }
 
     // 2. Check if `to` is reachable
-    const kingMoves = this.generateKingMoves(from, blackPieces);
+    const kingMoves = this.generateKingAttacks(from, blackPieces);
 
     if (u64_and(kingMoves, toMask) === 0n) {
       throw new Error("Illegal King move");
@@ -942,5 +1099,4 @@ export default class BitBoard {
 
     this.blackKingMoved = true;
   }
-
 }
