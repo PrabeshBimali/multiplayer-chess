@@ -9,17 +9,9 @@ export default class ClientGame {
   private fen: string = this.backendGame.getFen()
   private board: Board = new Board(this.fen)
 
-  moveAPiece(piece: PieceType, from: Position, to: Position) {
+  moveAPiece(from: Position, to: Position, type: PieceType, color: PieceColor) {
     try {
-      if(this.turn === PieceColor.WHITE) {
-
-        this.backendGame.moveWhitePiece(piece, from, to)
-
-      } else if(this.turn === PieceColor.BLACK) {
-
-        this.backendGame.moveBlackPiece(piece, from, to)
-
-      }
+      this.backendGame.moveAPiece(from, to, type, color)
       this.fen = this.backendGame.getFen()
       this.turn = this.backendGame.getTurn()
       this.board.converFENToBoardState(this.fen)

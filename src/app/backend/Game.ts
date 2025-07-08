@@ -15,87 +15,20 @@ export default class Game {
     return ((7-row) * 8) + (7-col)
   }
 
-  moveWhitePiece(piece: PieceType, from: Position, to: Position) {
-    if(this.turn !== PieceColor.WHITE) {
-      throw new Error("Not White Turn")
+  moveAPiece(from: Position, to: Position, type: PieceType, color: PieceColor) {
+    if(this.turn !== color) {
+      throw new Error(`Not ${color} Turn`)
     }
 
     const fromPosition: number = this.positionToBitBoardIndex(from.row, from.col)
     const toPosition: number = this.positionToBitBoardIndex(to.row, to.col)
-    console.log(piece)
 
-    switch(piece) {
-      case PieceType.PAWN:
-        this.bitboard.moveWhitePawn(fromPosition, toPosition)
-        break
-      
-      case PieceType.ROOK:
-        this.bitboard.moveWhiteRook(fromPosition, toPosition)
-        break
+    this.bitboard.makeMove(fromPosition, toPosition, type, color)
 
-      case PieceType.BISHOP:
-        this.bitboard.moveWhiteBishop(fromPosition, toPosition)
-        break
-
-      case PieceType.QUEEN:
-        this.bitboard.moveWhiteQueen(fromPosition, toPosition)
-        break
-
-      case PieceType.KNIGHT:
-        this.bitboard.moveWhiteKnight(fromPosition, toPosition)
-        break
-      
-      case PieceType.KING:
-        this.bitboard.moveWhiteKing(fromPosition, toPosition)
-        break
-       
-      default:
-        throw new Error("Piece not recognized")
-    } 
-    this.turn = PieceColor.BLACK
+    this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()
   }
   
-  moveBlackPiece(piece: PieceType, from: Position, to: Position) {
-    if(this.turn !== PieceColor.BLACK) {
-      throw new Error("Not Black Turn")
-    }
-
-    const fromPosition: number = this.positionToBitBoardIndex(from.row, from.col)
-    const toPosition: number = this.positionToBitBoardIndex(to.row, to.col)
-
-    switch(piece) {
-      case PieceType.PAWN:
-        this.bitboard.moveBlackPawn(fromPosition, toPosition)
-        break
-      
-      case PieceType.ROOK:
-        this.bitboard.moveBlackRook(fromPosition, toPosition)
-        break
-
-      case PieceType.BISHOP:
-        this.bitboard.moveBlackBishop(fromPosition, toPosition)
-        break
-      
-      case PieceType.QUEEN:
-        this.bitboard.moveBlackQueen(fromPosition, toPosition)
-        break
-
-      case PieceType.KNIGHT:
-        this.bitboard.moveBlackKnight(fromPosition, toPosition)
-        break
-
-      case PieceType.KING:
-        this.bitboard.moveBlackKing(fromPosition, toPosition)
-        break
-       
-      default:
-        throw new Error("Piece not recognized")
-    } 
-    this.turn = PieceColor.WHITE
-    this.fen = this.bitboard.generateFENFromBitBoard()
-  }
-
   getFen(): string {
     return this.fen
   }

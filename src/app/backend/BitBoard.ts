@@ -1,9 +1,10 @@
-import { PieceColor } from "../types/global.enums";
+import { PieceColor, PieceType } from "../types/global.enums";
 import { u64_and, u64_not, u64_or, u64_shl, u64_shr } from "./helpers/uInt64.operations"
 import { BitboardIndex, indexToFENChar } from "./types/backend.enums"
 
 export default class BitBoard {
   private piecesPosition: BigUint64Array = new BigUint64Array(12)
+  private previousPiecesPosition: BigUint64Array = new BigUint64Array(12) // will be used to undo a move
 
   // for castling rights
   private whiteKingMoved = false;
@@ -33,6 +34,8 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.WhiteBishops] = 0x0000000000000024n
     this.piecesPosition[BitboardIndex.WhiteQueen] = 0x0000000000000010n
     this.piecesPosition[BitboardIndex.WhiteKing] = 0x0000000000000008n
+
+    this.previousPiecesPosition = this.piecesPosition.slice() // copy original state
   }
 
   occupiedSquares(): bigint {
@@ -1098,5 +1101,58 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.BlackKing] = blackKing
 
     this.blackKingMoved = true;
+  }
+
+  isInCheck(color: PieceColor): boolean {
+
+    const king = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteKing] : this.piecesPosition[BitboardIndex.BlackKing]
+    const enemyColor = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
+    const indexes = this.bitScan(king)
+
+    const index = indexes[0] //since there is only one king
+    return this.isSquareAttacked(index, enemyColor)
+  }
+
+  undoMove() {
+    this.piecesPosition = this.previousPiecesPosition.slice()
+  }
+
+  makeMove(from: number, to: number, type: PieceType, color: PieceColor): void {
+    switch(type) {
+      case PieceType.PAWN:
+        color === PieceColor.WHITE ? this.moveWhitePawn(from, to) : this.moveBlackPawn(from, to)
+        break
+      
+      case PieceType.ROOK:
+        color === PieceColor.WHITE ? this.moveWhiteRook(from, to) : this.moveBlackRook(from, to)
+        break
+      
+      case PieceType.BISHOP:
+        color === PieceColor.WHITE ? this.moveWhiteBishop(from, to) : this.moveBlackBishop(from, to)
+        break
+
+      case PieceType.KNIGHT:
+        color === PieceColor.WHITE ? this.moveWhiteKnight(from, to) : this.moveBlackKnight(from, to)
+        break
+
+      case PieceType.KING:
+        color === PieceColor.WHITE ? this.moveWhiteKing(from, to) : this.moveBlackKing(from, to)
+        break
+      
+      case PieceType.QUEEN:
+        color === PieceColor.WHITE ? this.moveWhiteQueen(from, to) : this.moveBlackQueen(from, to)
+        break
+      
+      default:
+        throw new Error(`Piece ${type} not recognized`)
+    }
+
+    if(this.isInCheck(color)) {
+      this.undoMove()
+      throw new Error(`King in check, try other move`)
+    }
+
+    // backup this state if move is correct
+    this.previousPiecesPosition = this.piecesPosition.slice()
   }
 }

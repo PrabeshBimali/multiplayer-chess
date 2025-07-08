@@ -39,7 +39,7 @@ export default function VisualBoard() {
     
     // do this if piece is already selected
     if(selectedPiece !== null) {
-      game.moveAPiece(selectedPiece.getType(), selectedPosition, position)
+      game.moveAPiece(selectedPosition, position, selectedPiece.getType(), selectedPiece.getColor())
       setBoard(game.getBoard())
       setSelectedPiece(null)
       setSelectedPosition({row: -1, col: -1})
