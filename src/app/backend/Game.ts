@@ -1,6 +1,7 @@
 import { PieceColor, PieceType } from "../types/global.enums";
 import { Position } from "../types/global.types";
 import BitBoard from "./BitBoard";
+import { Move } from "./types/backend.type";
 
 export default class Game {
   private turn: PieceColor = PieceColor.WHITE
@@ -23,7 +24,14 @@ export default class Game {
     const fromPosition: number = this.positionToBitBoardIndex(from.row, from.col)
     const toPosition: number = this.positionToBitBoardIndex(to.row, to.col)
 
-    this.bitboard.makeMove(fromPosition, toPosition, type, color)
+    const move: Move = {
+      from: fromPosition,
+      to: toPosition,
+      type: type,
+      color: color
+    }
+
+    this.bitboard.makeMove(move)
 
     this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()

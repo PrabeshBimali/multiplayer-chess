@@ -1,6 +1,7 @@
 import { PieceColor, PieceType } from "../types/global.enums";
 import { u64_and, u64_not, u64_or, u64_shl, u64_shr } from "./helpers/uInt64.operations"
 import { BitboardIndex, indexToFENChar } from "./types/backend.enums"
+import { Move } from "./types/backend.type";
 
 export default class BitBoard {
   private piecesPosition: BigUint64Array = new BigUint64Array(12)
@@ -182,7 +183,9 @@ export default class BitBoard {
     return fen
   }
 
-  private generatePawnMoves(from: number, color: PieceColor, occupied: bigint, enemy: bigint): bigint {
+  private generatePawnMoves(from: number, color: PieceColor): bigint {
+    const occupied = this.occupiedSquares()
+    const enemy = color === PieceColor.WHITE ?  this.blackOccupiedSquares() : this.whiteOccupiedSquares()
     const startingRank = color === PieceColor.WHITE ? 0x000000000000FF00n : 0x00FF000000000000n
     const notHFile = 0xfefefefefefefefen;
     const notAFile = 0x7f7f7f7f7f7f7f7fn;
@@ -232,7 +235,7 @@ export default class BitBoard {
     return moves
   }
   
-  moveWhitePawn(from: number, to: number) {
+  private moveWhitePawn(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -245,7 +248,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whitePawns: bigint = this.piecesPosition[BitboardIndex.WhitePawns]
-    const occupied: bigint = this.occupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a pawn at `from`
@@ -254,7 +256,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const pawnMoves = this.generatePawnMoves(from, PieceColor.WHITE, occupied, blackPieces);
+    const pawnMoves = this.generatePawnMoves(from, PieceColor.WHITE);
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -271,7 +273,7 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.WhitePawns] = whitePawns
   }
   
-  moveBlackPawn(from: number, to: number) {
+  private moveBlackPawn(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -284,7 +286,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackPawns: bigint = this.piecesPosition[BitboardIndex.BlackPawns]
-    const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
 
     // 1. Check there's a pawn at `from`
@@ -293,7 +294,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const pawnMoves = this.generatePawnMoves(from, PieceColor.BLACK, occupied, whitePieces);
+    const pawnMoves = this.generatePawnMoves(from, PieceColor.BLACK);
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -310,7 +311,11 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.BlackPawns] = blackPawns
   }
 
-  private generateRookMoves(from: number, occupied: bigint, friendly: bigint): bigint {
+  private generateRookMoves(from: number, color: PieceColor): bigint {
+
+    const occupied = this.occupiedSquares()
+    const friendly = color === PieceColor.WHITE ? this.whiteOccupiedSquares() : this.blackOccupiedSquares()
+
     const directions = [+1, -1, +8, -8]; // E, W, N, S
     let moves = 0n;
 
@@ -339,7 +344,7 @@ export default class BitBoard {
     return moves;
   }
 
-  moveWhiteRook(from: number, to: number) {
+  private moveWhiteRook(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -352,8 +357,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whiteRooks: bigint = this.piecesPosition[BitboardIndex.WhiteRooks]
-    const occupied: bigint = this.occupiedSquares()
-    const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a rook at `from`
@@ -362,7 +365,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const rookMoves = this.generateRookMoves(from, occupied, whitePieces);
+    const rookMoves = this.generateRookMoves(from, PieceColor.WHITE);
 
     if (u64_and(rookMoves, toMask) === 0n) {
       throw new Error("Illegal Rook move");
@@ -384,7 +387,7 @@ export default class BitBoard {
     }
   }
   
-  moveBlackRook(from: number, to: number) {
+  private moveBlackRook(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -397,9 +400,7 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackRooks: bigint = this.piecesPosition[BitboardIndex.BlackRooks]
-    const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
-    const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a rook at `from`
     if (u64_and(blackRooks, fromMask) === 0n) {
@@ -407,7 +408,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const rookMoves = this.generateRookMoves(from, occupied, blackPieces);
+    const rookMoves = this.generateRookMoves(from, PieceColor.BLACK);
 
     if (u64_and(rookMoves, toMask) === 0n) {
       throw new Error("Illegal Rook move");
@@ -438,7 +439,10 @@ export default class BitBoard {
     return diff !== 1;
   }
 
-  private generateBishopMoves(from: number, occupied: bigint, friendly: bigint): bigint {
+  private generateBishopMoves(from: number, color: PieceColor): bigint {
+
+    const occupied = this.occupiedSquares()
+    const friendly = color === PieceColor.WHITE ? this.whiteOccupiedSquares() : this.blackOccupiedSquares()
 
     const directions = [+7, +9, -7, -9]; // NW, NE, SE, SW
     let moves = 0n;
@@ -468,7 +472,7 @@ export default class BitBoard {
     return moves;
   }
 
-  moveWhiteBishop(from: number, to: number) {
+  private moveWhiteBishop(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -481,8 +485,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whiteBishops: bigint = this.piecesPosition[BitboardIndex.WhiteBishops]
-    const occupied: bigint = this.occupiedSquares()
-    const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Bishop at `from`
@@ -491,7 +493,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const bishopMoves = this.generateBishopMoves(from, occupied, whitePieces);
+    const bishopMoves = this.generateBishopMoves(from, PieceColor.WHITE);
 
     if (u64_and(bishopMoves, toMask) === 0n) {
       throw new Error("Illegal Bishop move");
@@ -508,7 +510,7 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.WhiteBishops] = whiteBishops
   }
   
-  moveBlackBishop(from: number, to: number) {
+  private moveBlackBishop(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -521,9 +523,7 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackBishops: bigint = this.piecesPosition[BitboardIndex.BlackBishops]
-    const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
-    const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Bishop at `from`
     if (u64_and(blackBishops, fromMask) === 0n) {
@@ -531,7 +531,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const bishopMoves = this.generateBishopMoves(from, occupied, blackPieces);
+    const bishopMoves = this.generateBishopMoves(from, PieceColor.BLACK);
 
     if (u64_and(bishopMoves, toMask) === 0n) {
       throw new Error("Illegal Bishop move");
@@ -548,13 +548,13 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.BlackBishops] = blackBishops
   }
 
-  private generateQueenMoves(from: number, occupied: bigint, friendly: bigint): bigint {
-    const diagonalMoves = this.generateBishopMoves(from, occupied, friendly);
-    const linearMoves = this.generateRookMoves(from, occupied, friendly)
+  private generateQueenMoves(from: number, color: PieceColor): bigint {
+    const diagonalMoves = this.generateBishopMoves(from, color);
+    const linearMoves = this.generateRookMoves(from, color)
     return u64_or(diagonalMoves, linearMoves)
   }
   
-  moveWhiteQueen(from: number, to: number) {
+  private moveWhiteQueen(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -567,8 +567,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whiteQueen: bigint = this.piecesPosition[BitboardIndex.WhiteQueen]
-    const occupied: bigint = this.occupiedSquares()
-    const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Queen at `from`
@@ -577,7 +575,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const queenMoves = this.generateQueenMoves(from, occupied, whitePieces);
+    const queenMoves = this.generateQueenMoves(from, PieceColor.WHITE);
 
     if (u64_and(queenMoves, toMask) === 0n) {
       throw new Error("Illegal Queen move");
@@ -594,7 +592,7 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.WhiteQueen] = whiteQueen
   }
   
-  moveBlackQueen(from: number, to: number) {
+  private moveBlackQueen(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -607,9 +605,7 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackQueen: bigint = this.piecesPosition[BitboardIndex.BlackQueen]
-    const occupied: bigint = this.occupiedSquares()
     const whitePieces: bigint = this.whiteOccupiedSquares()
-    const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Queen at `from`
     if (u64_and(blackQueen, fromMask) === 0n) {
@@ -617,7 +613,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const queenMoves = this.generateQueenMoves(from, occupied, blackPieces);
+    const queenMoves = this.generateQueenMoves(from, PieceColor.BLACK);
 
     if (u64_and(queenMoves, toMask) === 0n) {
       throw new Error("Illegal Queen move");
@@ -634,7 +630,10 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.BlackQueen] = blackQueen
   }
 
-  generateKnightMoves(from: number, friendly: bigint): bigint {
+  private generateKnightMoves(from: number, color: PieceColor): bigint {
+
+    const friendly = color === PieceColor.WHITE ? this.whiteOccupiedSquares() : this.blackOccupiedSquares()
+
     const fromMask = u64_shl(1n, BigInt(from));
 
     const notHFile = 0xFEFEFEFEFEFEFEFEn;
@@ -690,7 +689,7 @@ export default class BitBoard {
 
   }
 
-  moveWhiteKnight(from: number, to: number) {
+  private moveWhiteKnight(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -703,7 +702,6 @@ export default class BitBoard {
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whiteKnights: bigint = this.piecesPosition[BitboardIndex.WhiteKnights]
-    const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Knight at `from`
@@ -712,7 +710,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const knightMoves = this.generateKnightMoves(from, whitePieces);
+    const knightMoves = this.generateKnightMoves(from, PieceColor.WHITE);
 
     if (u64_and(knightMoves, toMask) === 0n) {
       throw new Error("Illegal Knight move");
@@ -729,7 +727,7 @@ export default class BitBoard {
     this.piecesPosition[BitboardIndex.WhiteKnights] = whiteKnights
   }
   
-  moveBlackKnight(from: number, to: number) {
+  private moveBlackKnight(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -743,7 +741,6 @@ export default class BitBoard {
     const toMask = u64_shl(1n, BigInt(to));
     let blackKnights: bigint = this.piecesPosition[BitboardIndex.BlackKnights]
     const whitePieces: bigint = this.whiteOccupiedSquares()
-    const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a Knight at `from`
     if (u64_and(blackKnights, fromMask) === 0n) {
@@ -751,7 +748,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const knightMoves = this.generateKnightMoves(from, blackPieces);
+    const knightMoves = this.generateKnightMoves(from, PieceColor.BLACK);
 
     if (u64_and(knightMoves, toMask) === 0n) {
       throw new Error("Illegal Knight move");
@@ -770,14 +767,12 @@ export default class BitBoard {
   
   private generateAllPawnAttacks(color: PieceColor): bigint {
     const pawns: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhitePawns] : this.piecesPosition[BitboardIndex.BlackPawns];
-    const enemy: bigint = color === PieceColor.WHITE ?  this.blackOccupiedSquares() : this.whiteOccupiedSquares()
-    const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(pawns)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generatePawnMoves(idx, color, occupied, enemy))
+      attacks = u64_or(attacks, this.generatePawnMoves(idx, color))
     }
 
     return attacks
@@ -785,14 +780,12 @@ export default class BitBoard {
 
   private generateAllRookAttacks(color: PieceColor): bigint {
     const rooks: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteRooks] : this.piecesPosition[BitboardIndex.BlackRooks];
-    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
-    const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(rooks)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generateRookMoves(idx, occupied, friendly))
+      attacks = u64_or(attacks, this.generateRookMoves(idx, color))
     }
 
     return attacks
@@ -800,42 +793,36 @@ export default class BitBoard {
   
   private generateAllBishopAttacks(color: PieceColor): bigint {
     const bishops: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteBishops] : this.piecesPosition[BitboardIndex.BlackBishops];
-    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
-    const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(bishops)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generateBishopMoves(idx, occupied, friendly))
+      attacks = u64_or(attacks, this.generateBishopMoves(idx, color))
     }
     return attacks
   }
   
   private generateAllKnightAttacks(color: PieceColor): bigint {
     const knights: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteKnights] : this.piecesPosition[BitboardIndex.BlackKnights];
-    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
-    const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(knights)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generateKnightMoves(idx, friendly))
+      attacks = u64_or(attacks, this.generateKnightMoves(idx, color))
     }
     return attacks
   }
   
   private generateAllQueenAttacks(color: PieceColor): bigint {
     const queens: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteQueen] : this.piecesPosition[BitboardIndex.BlackQueen];
-    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
-    const occupied: bigint = this.occupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(queens)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generateQueenMoves(idx, occupied, friendly))
+      attacks = u64_or(attacks, this.generateQueenMoves(idx, color))
     }
     return attacks
   }
@@ -985,7 +972,7 @@ export default class BitBoard {
     return true
   }
 
-  moveWhiteKing(from: number, to: number) {
+  private moveWhiteKing(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -1044,7 +1031,7 @@ export default class BitBoard {
     this.whiteKingMoved = true
   }
   
-  moveBlackKing(from: number, to: number) {
+  private moveBlackKing(from: number, to: number) {
 
     if(from === to) {
       throw new Error("Cannot move to same square")
@@ -1103,7 +1090,7 @@ export default class BitBoard {
     this.blackKingMoved = true;
   }
 
-  isInCheck(color: PieceColor): boolean {
+  private isInCheck(color: PieceColor): boolean {
 
     const king = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteKing] : this.piecesPosition[BitboardIndex.BlackKing]
     const enemyColor = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
@@ -1113,11 +1100,21 @@ export default class BitBoard {
     return this.isSquareAttacked(index, enemyColor)
   }
 
-  undoMove() {
+  // For checkmate function
+  //private generateAllPseudoLegalMove(color: PieceColor): Array<Move> {
+
+  //} 
+
+ // isKingCheckmate(color: PieceColor): boolean {
+ //   
+ // }
+
+  private undoMove() {
     this.piecesPosition = this.previousPiecesPosition.slice()
   }
 
-  makeMove(from: number, to: number, type: PieceType, color: PieceColor): void {
+  makeMove(move: Move): void {
+    const {from, to, type, color} = move
     switch(type) {
       case PieceType.PAWN:
         color === PieceColor.WHITE ? this.moveWhitePawn(from, to) : this.moveBlackPawn(from, to)
