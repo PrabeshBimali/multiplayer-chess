@@ -15,6 +15,8 @@ export default class BitBoard {
   private blackRookA8MovedOrCaptured = false; // queenside
   private blackRookH8MovedOrCaptured = false; // kingside
 
+  private checkmate: PieceColor|null = null
+
   constructor() {
     this.createNewBitBoard()
   }
@@ -835,12 +837,14 @@ export default class BitBoard {
     const indices: Array<number> = this.bitScan(king)
 
     for (const idx of indices) {
-      attacks = u64_or(attacks, this.generateKingAttacks(idx, friendly))
+      attacks = u64_or(attacks, this.generateKingAttacks(idx, color))
     }
     return attacks
   }
 
-  private generateKingAttacks(from: number, friendly: bigint): bigint {
+  private generateKingAttacks(from: number, color: PieceColor): bigint {
+
+    const friendly = color === PieceColor.WHITE ? this.whiteOccupiedSquares() : this.blackOccupiedSquares()
     const notHFile = 0xFEFEFEFEFEFEFEFEn;
     const notAFile = 0x7F7F7F7F7F7F7F7Fn;
 
@@ -986,7 +990,6 @@ export default class BitBoard {
     const toMask = u64_shl(1n, BigInt(to));
     let whiteKing: bigint = this.piecesPosition[BitboardIndex.WhiteKing]
     let whiteRooks = this.piecesPosition[BitboardIndex.WhiteRooks] // for castling
-    const whitePieces: bigint = this.whiteOccupiedSquares()
     const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a King at `from`
@@ -1012,7 +1015,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const kingMoves = this.generateKingAttacks(from, whitePieces);
+    const kingMoves = this.generateKingAttacks(from, PieceColor.WHITE);
 
     if (u64_and(kingMoves, toMask) === 0n) {
       throw new Error("Illegal King move");
@@ -1046,7 +1049,6 @@ export default class BitBoard {
     let blackKing: bigint = this.piecesPosition[BitboardIndex.BlackKing]
     let blackRooks: bigint = this.piecesPosition[BitboardIndex.BlackRooks]
     const whitePieces: bigint = this.whiteOccupiedSquares()
-    const blackPieces: bigint = this.blackOccupiedSquares()
 
     // 1. Check there's a King at `from`
     if (u64_and(blackKing, fromMask) === 0n) {
@@ -1071,7 +1073,7 @@ export default class BitBoard {
     }
 
     // 2. Check if `to` is reachable
-    const kingMoves = this.generateKingAttacks(from, blackPieces);
+    const kingMoves = this.generateKingAttacks(from, PieceColor.BLACK);
 
     if (u64_and(kingMoves, toMask) === 0n) {
       throw new Error("Illegal King move");
@@ -1100,21 +1102,67 @@ export default class BitBoard {
     return this.isSquareAttacked(index, enemyColor)
   }
 
-  // For checkmate function
-  //private generateAllPseudoLegalMove(color: PieceColor): Array<Move> {
 
-  //} 
+  private generateAllPseudoLegalMoves(color: PieceColor): Array<Move> {
+    const moves: Array<Move> = [];
 
- // isKingCheckmate(color: PieceColor): boolean {
- //   
- // }
+    const isWhite = color === PieceColor.WHITE;
+
+    // Map piece index to generator and type
+    // Maybe this approach can be changed in future but for now it works
+    const pieceInfo = [
+      { type: PieceType.PAWN,     index: isWhite ? BitboardIndex.WhitePawns   : BitboardIndex.BlackPawns,   gen: this.generatePawnMoves.bind(this) },
+      { type: PieceType.ROOK,     index: isWhite ? BitboardIndex.WhiteRooks   : BitboardIndex.BlackRooks,   gen: this.generateRookMoves.bind(this) },
+      { type: PieceType.KNIGHT,   index: isWhite ? BitboardIndex.WhiteKnights : BitboardIndex.BlackKnights, gen: this.generateKnightMoves.bind(this) },
+      { type: PieceType.BISHOP,   index: isWhite ? BitboardIndex.WhiteBishops : BitboardIndex.BlackBishops, gen: this.generateBishopMoves.bind(this) },
+      { type: PieceType.QUEEN,    index: isWhite ? BitboardIndex.WhiteQueen   : BitboardIndex.BlackQueen,   gen: this.generateQueenMoves.bind(this) },
+      { type: PieceType.KING,     index: isWhite ? BitboardIndex.WhiteKing    : BitboardIndex.BlackKing,    gen: this.generateKingAttacks.bind(this) },
+    ];
+
+    for (const { type, index, gen } of pieceInfo) {
+      const bitboard = this.piecesPosition[index];
+
+      // For each set bit (i.e. piece), get its square index
+      const pieceSquares = this.bitScan(bitboard);
+
+      for (const from of pieceSquares) {
+        const possibleMoves: bigint = gen(from, color); // generates attack bitboard
+
+        const moveTargets = this.bitScan(possibleMoves);
+        for (const to of moveTargets) {
+          moves.push({ from, to, type, color });
+        }
+      }
+    }
+
+    return moves;
+}
+
+
+  isKingCheckmate(color: PieceColor): boolean {
+    const allMoves: Array<Move> = this.generateAllPseudoLegalMoves(color)
+    let isCheckmate = true
+
+    for (const move of allMoves) {
+      this.simulateMove(move)
+      if (!this.isInCheck(color)) {
+        isCheckmate = false
+        break
+      }
+      this.undoMove()
+    }  
+
+    this.undoMove()
+    return isCheckmate
+  }
 
   private undoMove() {
     this.piecesPosition = this.previousPiecesPosition.slice()
   }
 
-  makeMove(move: Move): void {
+  simulateMove(move: Move): void {
     const {from, to, type, color} = move
+    console.log(this.generateAllPseudoLegalMoves(color))
     switch(type) {
       case PieceType.PAWN:
         color === PieceColor.WHITE ? this.moveWhitePawn(from, to) : this.moveBlackPawn(from, to)
@@ -1143,13 +1191,29 @@ export default class BitBoard {
       default:
         throw new Error(`Piece ${type} not recognized`)
     }
+  }
 
-    if(this.isInCheck(color)) {
+  makeMove(move: Move) {
+    if(this.checkmate !== null) {
+      throw new Error(`${this.checkmate} king Checkmate. Game Over!`)
+    }
+    this.simulateMove(move)
+    const enemyColor = move.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
+
+    if(this.isInCheck(move.color)) {
       this.undoMove()
       throw new Error(`King in check, try other move`)
     }
 
     // backup this state if move is correct
     this.previousPiecesPosition = this.piecesPosition.slice()
+
+    if(this.isKingCheckmate(enemyColor)) {
+      this.checkmate = enemyColor
+    }
+  }
+
+  getCheckmate(): PieceColor | null {
+    return this.checkmate
   }
 }
