@@ -17,6 +17,10 @@ export default class BitBoard {
 
   private checkmate: PieceColor|null = null
 
+  // for checking en passant
+  private whiteEnPassantSquares = 0n
+  private blackEnPassantSquares = 0n
+
   constructor() {
     this.createNewBitBoard()
   }
@@ -187,7 +191,7 @@ export default class BitBoard {
 
   private generatePawnMoves(from: number, color: PieceColor): bigint {
     const occupied = this.occupiedSquares()
-    const enemy = color === PieceColor.WHITE ?  this.blackOccupiedSquares() : this.whiteOccupiedSquares()
+    const enemy = color === PieceColor.WHITE ?  u64_or(this.blackOccupiedSquares(), this.blackEnPassantSquares) : u64_or(this.whiteOccupiedSquares(), this.whiteEnPassantSquares)
     const startingRank = color === PieceColor.WHITE ? 0x000000000000FF00n : 0x00FF000000000000n
     const notHFile = 0xfefefefefefefefen;
     const notAFile = 0x7f7f7f7f7f7f7f7fn;
@@ -224,7 +228,7 @@ export default class BitBoard {
     } 
     else {
       mask = u64_shr(piecePosition, 9n)
-      if(u64_and(mask, enemy) !== 0n) {
+      if(u64_and(piecePosition, notHFile) !== 0n && u64_and(mask, enemy) !== 0n) {
         moves = u64_or(moves, mask)
       }
 
@@ -247,6 +251,8 @@ export default class BitBoard {
       throw new Error("Illegal Move")
     }
 
+    // reset en passant
+    this.whiteEnPassantSquares = 0n
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whitePawns: bigint = this.piecesPosition[BitboardIndex.WhitePawns]
@@ -267,12 +273,21 @@ export default class BitBoard {
     // 3. If capturing, remove black piece from correct board
     if (u64_and(blackPieces, toMask) !== 0n) {
       this.removeBlackPiece(to);
+    } 
+    else if(u64_and(this.blackEnPassantSquares, toMask) !== 0n ) {
+        // if to is in en passant square capture to - 8 black pawn
+        this.removeBlackPiece(to - 8)
     }
 
     // 4. Update pawn position
     whitePawns = u64_and(whitePawns, u64_not(fromMask));
     whitePawns = u64_or(whitePawns, toMask);
     this.piecesPosition[BitboardIndex.WhitePawns] = whitePawns
+
+    // if white piece moved 2 place then square below that will be en passant square
+    if(to - from === 16) {
+      this.whiteEnPassantSquares = u64_shl(1n, BigInt(from + 8))
+    }
   }
   
   private moveBlackPawn(from: number, to: number) {
@@ -285,6 +300,8 @@ export default class BitBoard {
       throw new Error("Illegal Move")
     }
 
+    // reset en passant squares
+    this.blackEnPassantSquares = 0n
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackPawns: bigint = this.piecesPosition[BitboardIndex.BlackPawns]
@@ -305,12 +322,20 @@ export default class BitBoard {
     // 3. If capturing, remove black piece from correct board
     if (u64_and(whitePieces, toMask) !== 0n) {
       this.removeWhitePiece(to);
+    } else if(u64_and(this.whiteEnPassantSquares, toMask)) {
+        // if to is in white en passant square capture white pawn at to + 8
+        this.removeWhitePiece(to + 8)
     }
 
     // 4. Update pawn position
     blackPawns = u64_and(blackPawns, u64_not(fromMask));
     blackPawns = u64_or(blackPawns, toMask);
     this.piecesPosition[BitboardIndex.BlackPawns] = blackPawns
+
+    // set square below as en passant
+    if(from - to === 16) {
+      this.blackEnPassantSquares = u64_shl(1n, BigInt(from -8))
+    }
   }
 
   private generateRookMoves(from: number, color: PieceColor): bigint {
@@ -1208,10 +1233,24 @@ export default class BitBoard {
     // backup this state if move is correct
     this.previousPiecesPosition = this.piecesPosition.slice()
 
-    if(this.isKingCheckmate(enemyColor)) {
-      this.checkmate = enemyColor
+    // first check if enemy color is in check for less calcultion then check checkmate
+    if(this.isInCheck(enemyColor)) {
+      if(this.isKingCheckmate(enemyColor)) {
+        this.checkmate = enemyColor
+      }
     }
   }
+
+  // Generate Valid For Frontend
+  //generateValidMovesForFrontend(move: Move): Object {
+  //  const { from, to, type, color } = move
+  //  let vaildMoves: bigint = 0n
+
+  //  switch(type) {
+  //    case PieceType.PAWN:
+  //      vaildMoves = this.generatePawnMoves(from, color)
+  //  }
+  //}
 
   getCheckmate(): PieceColor | null {
     return this.checkmate

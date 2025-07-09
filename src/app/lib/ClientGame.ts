@@ -7,6 +7,7 @@ export default class ClientGame {
   private backendGame: Game = new  Game()
   private turn: PieceColor = this.backendGame.getTurn()
   private fen: string = this.backendGame.getFen()
+  private checkmate: PieceColor | null = this.backendGame.getCheckmate()
   private board: Board = new Board(this.fen)
 
   moveAPiece(from: Position, to: Position, type: PieceType, color: PieceColor) {
@@ -14,6 +15,7 @@ export default class ClientGame {
       this.backendGame.moveAPiece(from, to, type, color)
       this.fen = this.backendGame.getFen()
       this.turn = this.backendGame.getTurn()
+      this.checkmate = this.backendGame.getCheckmate()
       this.board.converFENToBoardState(this.fen)
     } catch(e) {
       console.error(e)
@@ -27,5 +29,9 @@ export default class ClientGame {
 
   getTurn(): PieceColor {
     return this.turn
+  }
+
+  getCheckmate(): PieceColor | null {
+    return this.checkmate
   }
 }

@@ -7,6 +7,7 @@ export default class Game {
   private turn: PieceColor = PieceColor.WHITE
   private fen: string
   private bitboard: BitBoard = new BitBoard()
+  private checkmate: PieceColor | null = null
 
   constructor() {
     this.fen = this.bitboard.generateFENFromBitBoard()
@@ -35,6 +36,7 @@ export default class Game {
 
     this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()
+    this.checkmate = this.bitboard.getCheckmate()
   }
   
   getFen(): string {
@@ -43,5 +45,9 @@ export default class Game {
 
   getTurn(): PieceColor {
     return this.turn
+  }
+
+  getCheckmate(): PieceColor | null {
+    return this.checkmate
   }
 }

@@ -29,6 +29,7 @@ export default function VisualBoard() {
   const [validMoves, setValidMoves] = useState<Array<Position>>([])
   const [attackMoves, setAttackMoves] = useState<Array<Position>>([])
   const [turn, setTurn] = useState<PieceColor>(game.getTurn())
+  const [checkmate, setCheckmate] = useState<PieceColor | null>(null)
 
   useEffect(() : void => {
     setBoard(initialBoardState)
@@ -46,6 +47,7 @@ export default function VisualBoard() {
       setValidMoves([])
       setAttackMoves([])
       setTurn(game.getTurn())
+      setCheckmate(game.getCheckmate())
       return
     }
 
