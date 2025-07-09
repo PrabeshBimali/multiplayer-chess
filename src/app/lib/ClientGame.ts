@@ -23,6 +23,23 @@ export default class ClientGame {
     }
   }
 
+  private bitboardIndexToPosition(index: number): Position {
+    const row = (7 - Math.floor(index/8))
+    const col = (7 - (index%8))
+    return { row, col }
+  }
+
+  getPossibleMovesForAPiece(piecePos: Position, type: PieceType, color: PieceColor): Array<Position> {
+    const validMovesIndexes = this.backendGame.getPossibleMovesForAPiece(piecePos, type, color)
+    const validMoves = []
+    for (const i of validMovesIndexes) {
+      const pos = this.bitboardIndexToPosition(i)
+      validMoves.push(pos)
+    }
+
+    return validMoves
+  }
+
   getBoard(): FrontendBoard {
     return this.board.getBoard()
   }

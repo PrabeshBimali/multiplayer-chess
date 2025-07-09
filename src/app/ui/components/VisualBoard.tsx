@@ -63,11 +63,10 @@ export default function VisualBoard() {
 
     setSelectedPiece(currentPiece)
     setSelectedPosition(position)
-    const moves: Array<Position> = currentPiece.getValidMoves(position, board)
-    const attackMoves: Array<Position> = currentPiece.getCaptureMoves(position, board)
+    //const moves: Array<Position> = currentPiece.getValidMoves(position, board)
+    //const attackMoves: Array<Position> = currentPiece.getCaptureMoves(position, board)
+    const moves: Array<Position> = game.getPossibleMovesForAPiece(position, currentPiece.getType(), currentPiece.getColor())
     setValidMoves(moves)
-    setAttackMoves(attackMoves)
-
   }
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {

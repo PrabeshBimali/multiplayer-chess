@@ -38,6 +38,12 @@ export default class Game {
     this.fen = this.bitboard.generateFENFromBitBoard()
     this.checkmate = this.bitboard.getCheckmate()
   }
+
+  getPossibleMovesForAPiece(piecesPos: Position, type: PieceType, color: PieceColor): Array<number> {
+    const position = this.positionToBitBoardIndex(piecesPos.row, piecesPos.col)
+    console.log("Piece Position: ", piecesPos)
+    return this.bitboard.getValidSquaresForFrontend(position, type, color)
+  }
   
   getFen(): string {
     return this.fen

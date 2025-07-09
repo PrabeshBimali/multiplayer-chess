@@ -25,7 +25,7 @@ export default class BitBoard {
     this.createNewBitBoard()
   }
 
-  createNewBitBoard() {
+  private createNewBitBoard() {
     // Black Pieces Initial Position
     this.piecesPosition[BitboardIndex.BlackPawns] = 0x00FF000000000000n
     this.piecesPosition[BitboardIndex.BlackRooks] = 0x8100000000000000n
@@ -45,7 +45,7 @@ export default class BitBoard {
     this.previousPiecesPosition = this.piecesPosition.slice() // copy original state
   }
 
-  occupiedSquares(): bigint {
+  private occupiedSquares(): bigint {
     let occupiedSquares: bigint = 0x0n
     for(const val of this.piecesPosition) {
       occupiedSquares = u64_or(occupiedSquares, val)
@@ -54,18 +54,18 @@ export default class BitBoard {
     return occupiedSquares
   }
 
-  emptySquares(): bigint {
+  private emptySquares(): bigint {
     let emptySquares: bigint = u64_not(this.occupiedSquares())
     return emptySquares
   }
 
-  blackOccupiedSquares(): bigint {
+  private blackOccupiedSquares(): bigint {
     return u64_or(this.piecesPosition[BitboardIndex.BlackPawns], this.piecesPosition[BitboardIndex.BlackRooks],
             this.piecesPosition[BitboardIndex.BlackKnights], this.piecesPosition[BitboardIndex.BlackBishops],
               this.piecesPosition[BitboardIndex.BlackQueen], this.piecesPosition[BitboardIndex.BlackKing])
   }
   
-  whiteOccupiedSquares(): bigint {
+  private whiteOccupiedSquares(): bigint {
     return u64_or(this.piecesPosition[BitboardIndex.WhitePawns], this.piecesPosition[BitboardIndex.WhiteRooks],
             this.piecesPosition[BitboardIndex.WhiteKnights], this.piecesPosition[BitboardIndex.WhiteBishops],
               this.piecesPosition[BitboardIndex.WhiteQueen], this.piecesPosition[BitboardIndex.WhiteKing])
@@ -238,6 +238,7 @@ export default class BitBoard {
       }
 
     }
+    
     return moves
   }
   
@@ -251,8 +252,6 @@ export default class BitBoard {
       throw new Error("Illegal Move")
     }
 
-    // reset en passant
-    this.whiteEnPassantSquares = 0n
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let whitePawns: bigint = this.piecesPosition[BitboardIndex.WhitePawns]
@@ -265,6 +264,7 @@ export default class BitBoard {
 
     // 2. Check if `to` is reachable
     const pawnMoves = this.generatePawnMoves(from, PieceColor.WHITE);
+    console.log("Pawn: ", pawnMoves.toString(16))
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -300,8 +300,6 @@ export default class BitBoard {
       throw new Error("Illegal Move")
     }
 
-    // reset en passant squares
-    this.blackEnPassantSquares = 0n
     const fromMask = u64_shl(1n, BigInt(from));
     const toMask = u64_shl(1n, BigInt(to));
     let blackPawns: bigint = this.piecesPosition[BitboardIndex.BlackPawns]
@@ -314,6 +312,7 @@ export default class BitBoard {
 
     // 2. Check if `to` is reachable
     const pawnMoves = this.generatePawnMoves(from, PieceColor.BLACK);
+    console.log("Black Pawn: ", pawnMoves.toString(16))
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -1161,10 +1160,10 @@ export default class BitBoard {
     }
 
     return moves;
-}
+  }
 
 
-  isKingCheckmate(color: PieceColor): boolean {
+  private isKingCheckmate(color: PieceColor): boolean {
     const allMoves: Array<Move> = this.generateAllPseudoLegalMoves(color)
     let isCheckmate = true
 
@@ -1185,9 +1184,8 @@ export default class BitBoard {
     this.piecesPosition = this.previousPiecesPosition.slice()
   }
 
-  simulateMove(move: Move): void {
+  private simulateMove(move: Move): void {
     const {from, to, type, color} = move
-    console.log(this.generateAllPseudoLegalMoves(color))
     switch(type) {
       case PieceType.PAWN:
         color === PieceColor.WHITE ? this.moveWhitePawn(from, to) : this.moveBlackPawn(from, to)
@@ -1222,8 +1220,11 @@ export default class BitBoard {
     if(this.checkmate !== null) {
       throw new Error(`${this.checkmate} king Checkmate. Game Over!`)
     }
+    // reset en passant squares before move
+    move.color === PieceColor.WHITE ? this.whiteEnPassantSquares = 0n : this.blackEnPassantSquares = 0n
     this.simulateMove(move)
     const enemyColor = move.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
+
 
     if(this.isInCheck(move.color)) {
       this.undoMove()
@@ -1241,16 +1242,54 @@ export default class BitBoard {
     }
   }
 
-  // Generate Valid For Frontend
-  //generateValidMovesForFrontend(move: Move): Object {
-  //  const { from, to, type, color } = move
-  //  let vaildMoves: bigint = 0n
+  private filterValidSquaresForAPiece(type: PieceType, color: PieceColor, from: number, possibleSquares: bigint): Array<number> {
+    let indexes: Array<number> = this.bitScan(possibleSquares)
+    let validSquares: Array<number> = []
 
-  //  switch(type) {
-  //    case PieceType.PAWN:
-  //      vaildMoves = this.generatePawnMoves(from, color)
-  //  }
-  //}
+    for (const i of indexes) {
+      let move: Move = {
+        from: from,
+        to: i,
+        type: type,
+        color: color
+      }
+      this.simulateMove(move)
+      if(!this.isInCheck(color)) {
+        validSquares.push(i)
+      }
+      this.undoMove()
+    }
+
+    return validSquares
+  }
+
+  // Generate Valid For Frontend
+  getValidSquaresForFrontend(piecePos: number, type: PieceType, color: PieceColor): Array<number> {
+    let possibleSquares: bigint = 0n
+    switch(type) {
+      case PieceType.PAWN:
+        possibleSquares = this.generatePawnMoves(piecePos, color)
+        break
+      case PieceType.ROOK:
+        possibleSquares = this.generateRookMoves(piecePos, color)
+        break
+      case PieceType.BISHOP:
+        possibleSquares = this.generateBishopMoves(piecePos, color)
+        break
+      case PieceType.KNIGHT:
+        possibleSquares = this.generateKnightMoves(piecePos, color)
+        break
+      case PieceType.QUEEN:
+        possibleSquares = this.generateQueenMoves(piecePos, color)
+        break
+      case PieceType.KING:
+        possibleSquares = this.generateKingAttacks(piecePos, color)
+        break
+      default:
+        throw new Error(`Piece ${type} not recognized`)
+    }
+    return this.filterValidSquaresForAPiece(type, color, piecePos, possibleSquares)
+  }
 
   getCheckmate(): PieceColor | null {
     return this.checkmate
