@@ -1295,6 +1295,7 @@ export default class BitBoard {
     let normalSquares: bigint = u64_and(u64_not(enemySquares), possibleSquares)
     const normalMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, normalSquares)
     const captureMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, captureSquares)
+
     return {
       normalMoves: normalMoves,
       captureMoves: captureMoves
