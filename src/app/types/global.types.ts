@@ -10,4 +10,9 @@ export type Position = {
   col: number
 }
 
+export type ValidMovesFrontend = {
+  normalMoves: Array<Position>,
+  captureMoves: Array<Position>
+}
+
 export type FrontendBoard = Array<Array<Piece | null>>

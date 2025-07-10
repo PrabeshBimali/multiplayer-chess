@@ -6,3 +6,8 @@ export type Move = {
   type: PieceType,
   color: PieceColor
 }
+
+export type ValidMoves = {
+  normalMoves: Array<number>,
+  captureMoves: Array<number>
+}

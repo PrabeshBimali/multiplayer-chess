@@ -1,6 +1,7 @@
 import Game from "../backend/Game";
+import { ValidMoves } from "../backend/types/backend.type";
 import { PieceColor, PieceType } from "../types/global.enums";
-import { FrontendBoard, Position } from "../types/global.types";
+import { FrontendBoard, Position, ValidMovesFrontend } from "../types/global.types";
 import Board from "./Board";
 
 export default class ClientGame {
@@ -29,15 +30,21 @@ export default class ClientGame {
     return { row, col }
   }
 
-  getPossibleMovesForAPiece(piecePos: Position, type: PieceType, color: PieceColor): Array<Position> {
-    const validMovesIndexes = this.backendGame.getPossibleMovesForAPiece(piecePos, type, color)
-    const validMoves = []
-    for (const i of validMovesIndexes) {
+  getPossibleMovesForAPiece(piecePos: Position, type: PieceType, color: PieceColor): ValidMovesFrontend {
+    const moves: ValidMoves = this.backendGame.getPossibleMovesForAPiece(piecePos, type, color)
+    const normalMoves = []
+    const captureMoves = []
+    for (const i of moves.normalMoves) {
       const pos = this.bitboardIndexToPosition(i)
-      validMoves.push(pos)
+      normalMoves.push(pos)
     }
 
-    return validMoves
+    for(const i of moves.captureMoves) {
+      const pos = this.bitboardIndexToPosition(i)
+      captureMoves.push(pos)
+    }
+
+    return {normalMoves, captureMoves}
   }
 
   getBoard(): FrontendBoard {

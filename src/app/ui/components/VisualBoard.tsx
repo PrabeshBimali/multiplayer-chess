@@ -7,7 +7,7 @@ import Knight from "./pieces/Knight"
 import Bishop from "./pieces/Bishop"
 import Queen from "./pieces/Queen"
 import King from "./pieces/King"
-import { FrontendBoard, Position } from "@/app/types/global.types"
+import { FrontendBoard, Position, ValidMovesFrontend } from "@/app/types/global.types"
 import { Piece } from "@/app/types/global.interfaces"
 import { PieceColor, PieceType } from "@/app/types/global.enums"
 import ClientGame from "@/app/lib/ClientGame"
@@ -63,10 +63,11 @@ export default function VisualBoard() {
 
     setSelectedPiece(currentPiece)
     setSelectedPosition(position)
-    //const moves: Array<Position> = currentPiece.getValidMoves(position, board)
-    //const attackMoves: Array<Position> = currentPiece.getCaptureMoves(position, board)
-    const moves: Array<Position> = game.getPossibleMovesForAPiece(position, currentPiece.getType(), currentPiece.getColor())
-    setValidMoves(moves)
+    const moves: ValidMovesFrontend = game.getPossibleMovesForAPiece(position, currentPiece.getType(), currentPiece.getColor())
+    const normalMoves: Array<Position> = moves.normalMoves
+    const attackMoves: Array<Position> = moves.captureMoves
+    setValidMoves(normalMoves)
+    setAttackMoves(attackMoves)
   }
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {
@@ -120,12 +121,12 @@ export default function VisualBoard() {
                         ${piece !== null ? "cursor-pointer": ""}
                         ${((rowIndex + colIndex)%2 === 0) ? "bg-gray-300" : "bg-blue-300"}
                         ${isSelected ? "bg-lime-600" : ""}
-                        ${isValidMoveForSelectedPiece ? "bg-lime-400 opacity-50" : ""}
                         ${isAttackMoveForSelectedPiece ? "bg-red-300" : ""}
                       `}
                     onClick={() => handleSquareClicked(rowIndex, colIndex)}
                   >
                     {renderPieces(piece)}
+                    { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-600 rounded-full"></div> : ""}
                   </div>
                 )
               })}

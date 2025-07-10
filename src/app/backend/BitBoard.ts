@@ -1,7 +1,7 @@
 import { PieceColor, PieceType } from "../types/global.enums";
+import { ValidMoves, Move } from "./types/backend.type";
 import { u64_and, u64_not, u64_or, u64_shl, u64_shr } from "./helpers/uInt64.operations"
 import { BitboardIndex, indexToFENChar } from "./types/backend.enums"
-import { Move } from "./types/backend.type";
 
 export default class BitBoard {
   private piecesPosition: BigUint64Array = new BigUint64Array(12)
@@ -1264,8 +1264,10 @@ export default class BitBoard {
   }
 
   // Generate Valid For Frontend
-  getValidSquaresForFrontend(piecePos: number, type: PieceType, color: PieceColor): Array<number> {
+  getValidSquaresForFrontend(piecePos: number, type: PieceType, color: PieceColor): ValidMoves {
     let possibleSquares: bigint = 0n
+    let enemySquares: bigint = color === PieceColor.WHITE ? u64_or(this.blackOccupiedSquares(), this.blackEnPassantSquares) : 
+                                                            u64_or(this.whiteOccupiedSquares(), this.whiteEnPassantSquares)
     switch(type) {
       case PieceType.PAWN:
         possibleSquares = this.generatePawnMoves(piecePos, color)
@@ -1288,7 +1290,15 @@ export default class BitBoard {
       default:
         throw new Error(`Piece ${type} not recognized`)
     }
-    return this.filterValidSquaresForAPiece(type, color, piecePos, possibleSquares)
+
+    let captureSquares: bigint = u64_and(possibleSquares, enemySquares)
+    let normalSquares: bigint = u64_and(u64_not(enemySquares), possibleSquares)
+    const normalMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, normalSquares)
+    const captureMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, captureSquares)
+    return {
+      normalMoves: normalMoves,
+      captureMoves: captureMoves
+    }
   }
 
   getCheckmate(): PieceColor | null {

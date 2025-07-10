@@ -1,7 +1,7 @@
 import { PieceColor, PieceType } from "../types/global.enums";
 import { Position } from "../types/global.types";
 import BitBoard from "./BitBoard";
-import { Move } from "./types/backend.type";
+import { Move, ValidMoves } from "./types/backend.type";
 
 export default class Game {
   private turn: PieceColor = PieceColor.WHITE
@@ -39,9 +39,8 @@ export default class Game {
     this.checkmate = this.bitboard.getCheckmate()
   }
 
-  getPossibleMovesForAPiece(piecesPos: Position, type: PieceType, color: PieceColor): Array<number> {
+  getPossibleMovesForAPiece(piecesPos: Position, type: PieceType, color: PieceColor): ValidMoves {
     const position = this.positionToBitBoardIndex(piecesPos.row, piecesPos.col)
-    console.log("Piece Position: ", piecesPos)
     return this.bitboard.getValidSquaresForFrontend(position, type, color)
   }
   
