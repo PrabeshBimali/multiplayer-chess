@@ -14,6 +14,14 @@ export default class BitBoard {
   private whiteRookH1MovedOrCaptured = false; // kingside
   private blackRookA8MovedOrCaptured = false; // queenside
   private blackRookH8MovedOrCaptured = false; // kingside
+  
+  // these are needed to revert back state when simulating move
+  private prevWhiteKingMoved = false;
+  private prevBlackKingMoved = false;
+  private prevWhiteRookA1MovedOrCaptured = false; // queenside
+  private prevWhiteRookH1MovedOrCaptured = false; // kingside
+  private prevBlackRookA8MovedOrCaptured = false; // queenside
+  private prevBlackRookH8MovedOrCaptured = false; // kingside
 
   private checkmate: PieceColor|null = null
 
@@ -855,7 +863,6 @@ export default class BitBoard {
 
   private generateAllKingAttacks(color: PieceColor): bigint {
     const king: bigint = color === PieceColor.WHITE ? this.piecesPosition[BitboardIndex.WhiteKing] : this.piecesPosition[BitboardIndex.BlackKing];
-    const friendly: bigint = color === PieceColor.WHITE ?  this.whiteOccupiedSquares() : this.blackOccupiedSquares()
     let attacks: bigint = 0n
 
     const indices: Array<number> = this.bitScan(king)
@@ -999,6 +1006,31 @@ export default class BitBoard {
     }
     return true
   }
+  
+  // maybe it will be useful someday
+  private generateCastlingMoves(color: PieceColor): bigint {
+    let moves: bigint = 0n
+
+    if(color === PieceColor.WHITE) {
+      if(this.canWhiteCastleKingSide()) {
+        moves = u64_or(moves, u64_shl(1n, BigInt(1)))
+      }
+
+      if(this.canWhiteCastleQueenSide()) {
+        moves = u64_or(moves, u64_shl(1n, BigInt(5)))
+      }
+    } else if(color === PieceColor.BLACK) {
+      if(this.canBlackCastleKingSide()) {
+        moves = u64_or(moves, u64_shl(1n, BigInt(57)))
+      }
+
+      if(this.canBlackCastleQueenSide()) {
+        moves = u64_or(moves, u64_shl(1n, BigInt(61)))
+      }
+    }
+
+    return moves
+  }
 
   private moveWhiteKing(from: number, to: number) {
 
@@ -1079,6 +1111,7 @@ export default class BitBoard {
       throw new Error("No Black King at source square");
     }
     
+    console.log("CAN white castle king side: ",  this.canBlackCastleKingSide(),  "TO ", to)
     // First do castling moves
     if((this.canBlackCastleKingSide() && to === 57) || (this.canBlackCastleQueenSide() && to === 61)) {
       const kingToMask = u64_shl(1n, BigInt(to))
@@ -1182,6 +1215,13 @@ export default class BitBoard {
 
   private undoMove() {
     this.piecesPosition = this.previousPiecesPosition.slice()
+    this.previousPiecesPosition = this.piecesPosition.slice()
+    this.blackKingMoved = this.prevBlackKingMoved
+    this.whiteKingMoved = this.prevWhiteKingMoved
+    this.whiteRookA1MovedOrCaptured = this.prevWhiteRookA1MovedOrCaptured
+    this.whiteRookH1MovedOrCaptured = this.prevWhiteRookH1MovedOrCaptured
+    this.blackRookA8MovedOrCaptured = this.prevBlackRookA8MovedOrCaptured
+    this.blackRookH8MovedOrCaptured = this.prevBlackRookH8MovedOrCaptured
   }
 
   private simulateMove(move: Move): void {
@@ -1233,6 +1273,12 @@ export default class BitBoard {
 
     // backup this state if move is correct
     this.previousPiecesPosition = this.piecesPosition.slice()
+    this.prevBlackKingMoved = this.blackKingMoved
+    this.prevWhiteKingMoved = this.whiteKingMoved
+    this.prevWhiteRookA1MovedOrCaptured = this.whiteRookA1MovedOrCaptured
+    this.prevWhiteRookH1MovedOrCaptured = this.whiteRookH1MovedOrCaptured
+    this.prevBlackRookA8MovedOrCaptured = this.blackRookA8MovedOrCaptured
+    this.prevBlackRookH8MovedOrCaptured = this.blackRookH8MovedOrCaptured
 
     // first check if enemy color is in check for less calcultion then check checkmate
     if(this.isInCheck(enemyColor)) {
@@ -1268,6 +1314,7 @@ export default class BitBoard {
     let possibleSquares: bigint = 0n
     let enemySquares: bigint = color === PieceColor.WHITE ? u64_or(this.blackOccupiedSquares(), this.blackEnPassantSquares) : 
                                                             u64_or(this.whiteOccupiedSquares(), this.whiteEnPassantSquares)
+    let castlingMoves: Array<number> = []
     switch(type) {
       case PieceType.PAWN:
         possibleSquares = this.generatePawnMoves(piecePos, color)
@@ -1286,6 +1333,7 @@ export default class BitBoard {
         break
       case PieceType.KING:
         possibleSquares = this.generateKingAttacks(piecePos, color)
+        castlingMoves = this.bitScan(this.generateCastlingMoves(color))
         break
       default:
         throw new Error(`Piece ${type} not recognized`)
@@ -1295,6 +1343,7 @@ export default class BitBoard {
     let normalSquares: bigint = u64_and(u64_not(enemySquares), possibleSquares)
     const normalMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, normalSquares)
     const captureMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, captureSquares)
+    normalMoves.push(...castlingMoves)
 
     return {
       normalMoves: normalMoves,

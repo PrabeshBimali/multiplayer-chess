@@ -15,4 +15,9 @@ export type ValidMovesFrontend = {
   captureMoves: Array<Position>
 }
 
+export type PreviousMove = {
+  from: Position,
+  to: Position
+}
+
 export type FrontendBoard = Array<Array<Piece | null>>

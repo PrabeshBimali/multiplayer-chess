@@ -28,41 +28,33 @@ export default class Board {
   }
 
   converFENToBoardState(fen: string) {
-    try {
-      let currentRow: number = 0;
+    let currentRow: number = 0;
 
-      const position: string = fen.split(" ")[0]
-      for (const row of position.split("/")) {
-        let currentCol: number = 0;
+    const position: string = fen.split(" ")[0]
+    for (const row of position.split("/")) {
+      let currentCol: number = 0;
 
-        for(const char of row) {
+      for(const char of row) {
 
-          const emptySquares: number = Number(char)
+        const emptySquares: number = Number(char)
 
-          if(!emptySquares) {
-            
-            this.board[currentRow][currentCol] = this.createPieceFromFENChar(char)
+        if(!emptySquares) {
+          
+          this.board[currentRow][currentCol] = this.createPieceFromFENChar(char)
+          currentCol++
+
+        } else {
+
+          let count: number = 0
+          while(count < emptySquares) {
+            this.board[currentRow][currentCol] = null
+            count++
             currentCol++
-
-          } else {
-
-            let count: number = 0
-            while(count < emptySquares) {
-              this.board[currentRow][currentCol] = null
-              count++
-              currentCol++
-            }
-
           }
+
         }
-
-        currentRow++
-
       }
-
-    } catch(e) {
-      console.error(e)
-      return
+      currentRow++
     }
   }
 

@@ -28,46 +28,52 @@ export default function VisualBoard() {
   const [selectedPiece, setSelectedPiece] = useState<Piece | null>(null)
   const [validMoves, setValidMoves] = useState<Array<Position>>([])
   const [attackMoves, setAttackMoves] = useState<Array<Position>>([])
+  const [previousMoves, setPreviousMoves] = useState<Array<Position>>([])
   const [turn, setTurn] = useState<PieceColor>(game.getTurn())
   const [checkmate, setCheckmate] = useState<PieceColor | null>(null)
+
 
   useEffect(() : void => {
     setBoard(initialBoardState)
   }, [])
 
   function handleSquareClicked(row: number, col: number) {
-    const position: Position = {row: row, col: col}
+      const position: Position = {row: row, col: col}
+      const currentPiece: Piece | null = board[position.row][position.col]
     
-    // do this if piece is already selected
-    if(selectedPiece !== null) {
-      game.moveAPiece(selectedPosition, position, selectedPiece.getType(), selectedPiece.getColor())
-      setBoard(game.getBoard())
-      setSelectedPiece(null)
-      setSelectedPosition({row: -1, col: -1})
-      setValidMoves([])
-      setAttackMoves([])
-      setTurn(game.getTurn())
-      setCheckmate(game.getCheckmate())
-      return
-    }
+      // do this if piece is already selected
+      try {
+        if(selectedPiece !== null && (currentPiece === null || currentPiece.getColor() !== turn)) {
+          game.moveAPiece(selectedPosition, position, selectedPiece.getType(), selectedPiece.getColor())
+          setBoard(game.getBoard())
+          setSelectedPiece(null)
+          setSelectedPosition({row: -1, col: -1})
+          setValidMoves([])
+          setAttackMoves([])
+          setTurn(game.getTurn())
+          setCheckmate(game.getCheckmate())
+          setPreviousMoves(game.getPreviousMove())
+          return
+        }
+      } catch(e) {
+        console.error(e)
+      }
+      
+      if(currentPiece === null || currentPiece.getColor() !== turn) {
+        setSelectedPosition({row: -1, col: -1})
+        setValidMoves([])
+        setAttackMoves([])
+        setSelectedPiece(null)
+        return
+      }
 
-    const currentPiece: Piece | null = board[position.row][position.col]
-
-    if(currentPiece === null || currentPiece.getColor() !== turn) {
-      setSelectedPosition({row: -1, col: -1})
-      setValidMoves([])
-      setAttackMoves([])
-      setSelectedPiece(null)
-      return
-    }
-
-    setSelectedPiece(currentPiece)
-    setSelectedPosition(position)
-    const moves: ValidMovesFrontend = game.getPossibleMovesForAPiece(position, currentPiece.getType(), currentPiece.getColor())
-    const normalMoves: Array<Position> = moves.normalMoves
-    const attackMoves: Array<Position> = moves.captureMoves
-    setValidMoves(normalMoves)
-    setAttackMoves(attackMoves)
+      setSelectedPiece(currentPiece)
+      setSelectedPosition(position)
+      const moves: ValidMovesFrontend = game.getPossibleMovesForAPiece(position, currentPiece.getType(), currentPiece.getColor())
+      const normalMoves: Array<Position> = moves.normalMoves
+      const attackMoves: Array<Position> = moves.captureMoves
+      setValidMoves(normalMoves)
+      setAttackMoves(attackMoves)
   }
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {
@@ -99,8 +105,10 @@ export default function VisualBoard() {
 
   return (
     <>
-    <div className="flex justify-center">
-      <div className="w-full max-w-[80vh] h-[80vh]">
+    <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
+      <div>Here is where chat goes</div>
+      <div className="w-full">
+        <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
         {board.map((row: Array<Piece|null>, rowIndex: number) => {
           return( 
             <div 
@@ -112,6 +120,7 @@ export default function VisualBoard() {
                 const isSelected: boolean = rowIndex === selectedPosition?.row && colIndex === selectedPosition?.col
                 const isValidMoveForSelectedPiece: boolean = validMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
                 const isAttackMoveForSelectedPiece: boolean = attackMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                const isPreviousMoves: boolean = previousMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
                 return (
                   <div 
                     key={rowIndex+colIndex} 
@@ -122,6 +131,7 @@ export default function VisualBoard() {
                         ${((rowIndex + colIndex)%2 === 0) ? "bg-gray-300" : "bg-blue-300"}
                         ${isSelected ? "bg-lime-600" : ""}
                         ${isAttackMoveForSelectedPiece ? "bg-red-300" : ""}
+                        ${isPreviousMoves ? "bg-amber-500" : ""}
                       `}
                     onClick={() => handleSquareClicked(rowIndex, colIndex)}
                   >
@@ -133,6 +143,13 @@ export default function VisualBoard() {
           </div>
           )
         })}
+        <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
+      </div>
+      <div>
+        <div>Turn: {turn}</div>
+        <div className={`${checkmate === null ? "text-white" : "text-black"}`}>
+          {checkmate === PieceColor.WHITE ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
+        </div>
       </div>
     </div>
     </>

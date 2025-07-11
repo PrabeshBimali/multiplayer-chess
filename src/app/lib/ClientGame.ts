@@ -1,7 +1,7 @@
 import Game from "../backend/Game";
 import { ValidMoves } from "../backend/types/backend.type";
 import { PieceColor, PieceType } from "../types/global.enums";
-import { FrontendBoard, Position, ValidMovesFrontend } from "../types/global.types";
+import { FrontendBoard, Position, PreviousMove, ValidMovesFrontend } from "../types/global.types";
 import Board from "./Board";
 
 export default class ClientGame {
@@ -10,18 +10,15 @@ export default class ClientGame {
   private fen: string = this.backendGame.getFen()
   private checkmate: PieceColor | null = this.backendGame.getCheckmate()
   private board: Board = new Board(this.fen)
+  private previousMove: PreviousMove | null = this.backendGame.getPreviousMove()
 
   moveAPiece(from: Position, to: Position, type: PieceType, color: PieceColor) {
-    try {
-      this.backendGame.moveAPiece(from, to, type, color)
-      this.fen = this.backendGame.getFen()
-      this.turn = this.backendGame.getTurn()
-      this.checkmate = this.backendGame.getCheckmate()
-      this.board.converFENToBoardState(this.fen)
-    } catch(e) {
-      console.error(e)
-      return
-    }
+    this.backendGame.moveAPiece(from, to, type, color)
+    this.fen = this.backendGame.getFen()
+    this.turn = this.backendGame.getTurn()
+    this.checkmate = this.backendGame.getCheckmate()
+    this.board.converFENToBoardState(this.fen)
+    this.previousMove = this.backendGame.getPreviousMove()
   }
 
   private bitboardIndexToPosition(index: number): Position {
@@ -57,5 +54,13 @@ export default class ClientGame {
 
   getCheckmate(): PieceColor | null {
     return this.checkmate
+  }
+
+  getPreviousMove(): Array<Position> {
+    if(this.previousMove === null) return []
+    let prevMove: Array<Position> = []
+    prevMove.push(this.previousMove.from)
+    prevMove.push(this.previousMove.to)
+    return prevMove
   }
 }

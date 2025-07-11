@@ -1,5 +1,5 @@
 import { PieceColor, PieceType } from "../types/global.enums";
-import { Position } from "../types/global.types";
+import { Position, PreviousMove } from "../types/global.types";
 import BitBoard from "./BitBoard";
 import { Move, ValidMoves } from "./types/backend.type";
 
@@ -8,6 +8,7 @@ export default class Game {
   private fen: string
   private bitboard: BitBoard = new BitBoard()
   private checkmate: PieceColor | null = null
+  private previousMove: PreviousMove | null = null
 
   constructor() {
     this.fen = this.bitboard.generateFENFromBitBoard()
@@ -37,6 +38,7 @@ export default class Game {
     this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
     this.fen = this.bitboard.generateFENFromBitBoard()
     this.checkmate = this.bitboard.getCheckmate()
+    this.previousMove = {from, to}
   }
 
   getPossibleMovesForAPiece(piecesPos: Position, type: PieceType, color: PieceColor): ValidMoves {
@@ -54,5 +56,9 @@ export default class Game {
 
   getCheckmate(): PieceColor | null {
     return this.checkmate
+  }
+
+  getPreviousMove(): PreviousMove | null {
+    return this.previousMove
   }
 }
