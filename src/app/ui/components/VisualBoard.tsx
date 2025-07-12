@@ -52,7 +52,9 @@ export default function VisualBoard() {
           setAttackMoves([])
           setTurn(game.getTurn())
           setCheckmate(game.getCheckmate())
-          setPreviousMoves(game.getPreviousMove())
+          const prevMoves = game.getPreviousMove()
+          setPreviousMoves([{row: prevMoves[0].row, col: prevMoves[0].col},
+                            {row: prevMoves[1].row, col: prevMoves[1].col}])
           return
         }
       } catch(e) {
@@ -75,6 +77,10 @@ export default function VisualBoard() {
       setValidMoves(normalMoves)
       setAttackMoves(attackMoves)
   }
+
+  useEffect(() => {
+    console.log("test")
+  }, [previousMoves])
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {
     if(piece === null) return
@@ -121,22 +127,23 @@ export default function VisualBoard() {
                 const isValidMoveForSelectedPiece: boolean = validMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
                 const isAttackMoveForSelectedPiece: boolean = attackMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
                 const isPreviousMoves: boolean = previousMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                const linearPosition = rowIndex + colIndex
                 return (
                   <div 
-                    key={rowIndex+colIndex} 
+                    key={linearPosition} 
                     className=
                       {`
-                        aspect-square border border-amber-800 flex justify-center items-center
+                        aspect-square flex justify-center items-center
                         ${piece !== null ? "cursor-pointer": ""}
-                        ${((rowIndex + colIndex)%2 === 0) ? "bg-gray-300" : "bg-blue-300"}
-                        ${isSelected ? "bg-lime-600" : ""}
-                        ${isAttackMoveForSelectedPiece ? "bg-red-300" : ""}
-                        ${isPreviousMoves ? "bg-amber-500" : ""}
+                        ${((linearPosition)%2 === 0) ? "bg-chess1-light" : "bg-chess1-dark"}
+                        ${isSelected ? "bg-green-900 opacity-80" : ""}
+                        ${isPreviousMoves && !isAttackMoveForSelectedPiece ? ((linearPosition)%2 === 0 ? "bg-lime-200": "bg-green-600 opacity-80") : ""}
+                        ${isAttackMoveForSelectedPiece ? (linearPosition%2 === 0 ? "bg-red-300" : "bg-red-400"): ""}
                       `}
                     onClick={() => handleSquareClicked(rowIndex, colIndex)}
                   >
                     {renderPieces(piece)}
-                    { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-600 rounded-full"></div> : ""}
+                    { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-800 rounded-full opacity-80"></div> : ""}
                   </div>
                 )
               })}

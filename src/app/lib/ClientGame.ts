@@ -58,9 +58,9 @@ export default class ClientGame {
 
   getPreviousMove(): Array<Position> {
     if(this.previousMove === null) return []
-    let prevMove: Array<Position> = []
-    prevMove.push(this.previousMove.from)
-    prevMove.push(this.previousMove.to)
-    return prevMove
+    let prevMoves: Array<Position> = []
+    prevMoves.push(this.previousMove.from)
+    prevMoves.push(this.previousMove.to)
+    return prevMoves
   }
 }
