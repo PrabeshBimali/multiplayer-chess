@@ -20,12 +20,26 @@ export default class ClientGame {
     this.board.converFENToBoardState(this.fen)
     this.previousMove = this.backendGame.getPreviousMove()
   }
+  
+  promoteAPawn(color: PieceColor, type: PieceType) {
+    this.backendGame.promoteAPawn(color, type)
+    this.fen = this.backendGame.getFen()
+    this.turn = this.backendGame.getTurn()
+    this.checkmate = this.backendGame.getCheckmate()
+    this.board.converFENToBoardState(this.fen)
+    this.previousMove = this.backendGame.getPreviousMove()
+  }
 
   private bitboardIndexToPosition(index: number): Position {
     const row = (7 - Math.floor(index/8))
     const col = (7 - (index%8))
     return { row, col }
   }
+
+  canPawnPromote(color: PieceColor): boolean {
+    return this.backendGame.canPawnPromote(color)
+  }
+
 
   getPossibleMovesForAPiece(piecePos: Position, type: PieceType, color: PieceColor): ValidMovesFrontend {
     const moves: ValidMoves = this.backendGame.getPossibleMovesForAPiece(piecePos, type, color)

@@ -34,14 +34,38 @@ export default class Game {
     }
 
     this.bitboard.makeMove(move)
+    this.fen = this.bitboard.generateFENFromBitBoard()
+    this.previousMove = {from, to}
+
+    // if pawn can promote do not change turn or check checkmate for now 
+    if(type === PieceType.PAWN && this.bitboard.canPawnPromote(color)) {
+      return
+    }
 
     this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
-    this.fen = this.bitboard.generateFENFromBitBoard()
     this.checkmate = this.bitboard.getCheckmate()
-    this.previousMove = {from, to}
+  }
+
+  canPawnPromote(color: PieceColor): boolean {
+    return this.bitboard.canPawnPromote(color)
+  }
+
+  promoteAPawn(color: PieceColor, type: PieceType) {
+    if(this.turn !== color) {
+      throw new Error(`Not ${color} Turn`)
+    }
+    this.bitboard.promoteAPawn(color, type)
+    this.fen = this.bitboard.generateFENFromBitBoard()
+    this.turn = color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
+    this.checkmate = this.bitboard.getCheckmate()
   }
 
   getPossibleMovesForAPiece(piecesPos: Position, type: PieceType, color: PieceColor): ValidMoves {
+    
+    if(this.turn !== color) {
+      throw new Error(`Not ${color} Turn`)
+    }
+
     const position = this.positionToBitBoardIndex(piecesPos.row, piecesPos.col)
     return this.bitboard.getValidSquaresForFrontend(position, type, color)
   }

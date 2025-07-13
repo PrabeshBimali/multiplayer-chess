@@ -1,6 +1,6 @@
 import { PieceColor, PieceType } from "../types/global.enums";
 import { ValidMoves, Move } from "./types/backend.type";
-import { u64_and, u64_not, u64_or, u64_shl, u64_shr } from "./helpers/uInt64.operations"
+import { u64_and, u64_not, u64_or, u64_shl, u64_shr, u64_sub } from "./helpers/uInt64.operations"
 import { BitboardIndex, indexToFENChar } from "./types/backend.enums"
 
 export default class BitBoard {
@@ -272,7 +272,6 @@ export default class BitBoard {
 
     // 2. Check if `to` is reachable
     const pawnMoves = this.generatePawnMoves(from, PieceColor.WHITE);
-    console.log("Pawn: ", pawnMoves.toString(16))
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -320,7 +319,6 @@ export default class BitBoard {
 
     // 2. Check if `to` is reachable
     const pawnMoves = this.generatePawnMoves(from, PieceColor.BLACK);
-    console.log("Black Pawn: ", pawnMoves.toString(16))
 
     if (u64_and(pawnMoves, toMask) === 0n) {
       throw new Error("Illegal Pawn move");
@@ -342,6 +340,110 @@ export default class BitBoard {
     // set square below as en passant
     if(from - to === 16) {
       this.blackEnPassantSquares = u64_shl(1n, BigInt(from -8))
+    }
+  }
+
+  private promoteWhitePawn(type: PieceType) {
+    const rank8Mask: bigint = 0xFF00000000000000n
+    let allPawns = this.piecesPosition[BitboardIndex.WhitePawns]
+    const pawnToPromote = u64_and(allPawns, rank8Mask)
+
+    if(pawnToPromote === 0n) {
+      throw new Error(`No White Pawns in Rank 8`)
+    }
+
+    // if more than 1 pawn is able to promote
+    if(u64_and(pawnToPromote, u64_sub(pawnToPromote, 1n)) !== 0n) {
+      throw new Error(`More than 1 White Pawns to Promote`)
+    }
+    
+    // remove pawn from whitePawns
+    allPawns = u64_and(allPawns, u64_not(pawnToPromote))
+    this.piecesPosition[BitboardIndex.WhitePawns] = allPawns
+
+    // update previous positions
+    this.previousPiecesPosition[BitboardIndex.WhitePawns] = allPawns
+    switch(type) {
+      case PieceType.QUEEN:
+        let whiteQueens = this.piecesPosition[BitboardIndex.WhiteQueen]
+        whiteQueens = u64_or(whiteQueens, pawnToPromote)
+        this.piecesPosition[BitboardIndex.WhiteQueen] = whiteQueens
+        this.previousPiecesPosition[BitboardIndex.WhiteQueen] = whiteQueens
+        return
+      case PieceType.ROOK:
+        let whiteRooks = this.piecesPosition[BitboardIndex.WhiteRooks]
+        whiteRooks = u64_or(whiteRooks, pawnToPromote)
+        this.piecesPosition[BitboardIndex.WhiteRooks] = whiteRooks
+        this.previousPiecesPosition[BitboardIndex.WhiteRooks] = whiteRooks
+        return
+      case PieceType.BISHOP:
+        let whiteBishops = this.piecesPosition[BitboardIndex.WhiteBishops]
+        whiteBishops = u64_or(whiteBishops, pawnToPromote)
+        this.piecesPosition[BitboardIndex.WhiteBishops] = whiteBishops
+        this.previousPiecesPosition[BitboardIndex.WhiteBishops] = whiteBishops
+        return
+      case PieceType.KNIGHT:
+        let whiteKnights = this.piecesPosition[BitboardIndex.WhiteKnights]
+        whiteKnights = u64_or(whiteKnights, pawnToPromote)
+        this.piecesPosition[BitboardIndex.WhiteKnights] = whiteKnights
+        this.previousPiecesPosition[BitboardIndex.WhiteKnights] = whiteKnights
+        return
+    }
+  }
+  
+  private promoteBlackPawn(type: PieceType) {
+    const rank1Mask: bigint = 0x00000000000000FFn
+    let allPawns = this.piecesPosition[BitboardIndex.BlackPawns]
+    const pawnToPromote = u64_and(allPawns, rank1Mask)
+
+    if(pawnToPromote === 0n) {
+      throw new Error(`No Black Pawns in Rank 8`)
+    }
+
+    // if more than 1 pawn is able to promote
+    if(u64_and(pawnToPromote, u64_sub(pawnToPromote, 1n)) !== 0n) {
+      throw new Error(`More than 1 Black Pawns to Promote`)
+    }
+    
+    // remove pawn from whitePawns
+    allPawns = u64_and(allPawns, u64_not(pawnToPromote))
+    this.piecesPosition[BitboardIndex.BlackPawns] = allPawns
+
+    // update previous positions
+    this.previousPiecesPosition[BitboardIndex.BlackPawns] = allPawns
+    switch(type) {
+      case PieceType.QUEEN:
+        let queens = this.piecesPosition[BitboardIndex.BlackQueen]
+        queens = u64_or(queens, pawnToPromote)
+        this.piecesPosition[BitboardIndex.BlackQueen] = queens
+        this.previousPiecesPosition[BitboardIndex.BlackQueen] = queens
+        return
+      case PieceType.ROOK:
+        let rooks = this.piecesPosition[BitboardIndex.BlackRooks]
+        rooks = u64_or(rooks, pawnToPromote)
+        this.piecesPosition[BitboardIndex.BlackRooks] = rooks
+        this.previousPiecesPosition[BitboardIndex.BlackRooks] = rooks
+        return
+      case PieceType.BISHOP:
+        let bishops = this.piecesPosition[BitboardIndex.BlackBishops]
+        bishops = u64_or(bishops, pawnToPromote)
+        this.piecesPosition[BitboardIndex.BlackBishops] = bishops
+        this.previousPiecesPosition[BitboardIndex.BlackBishops] = bishops
+        return
+      case PieceType.KNIGHT:
+        let knights = this.piecesPosition[BitboardIndex.BlackKnights]
+        knights = u64_or(knights, pawnToPromote)
+        this.piecesPosition[BitboardIndex.BlackKnights] = knights
+        this.previousPiecesPosition[BitboardIndex.BlackKnights] = knights
+        return
+    }
+  }
+
+  promoteAPawn(color: PieceColor, type: PieceType) {
+    if(color === PieceColor.WHITE) {
+      this.promoteWhitePawn(type)
+    } else {
+      this.promoteBlackPawn(type)
     }
   }
 
@@ -1111,7 +1213,6 @@ export default class BitBoard {
       throw new Error("No Black King at source square");
     }
     
-    console.log("CAN white castle king side: ",  this.canBlackCastleKingSide(),  "TO ", to)
     // First do castling moves
     if((this.canBlackCastleKingSide() && to === 57) || (this.canBlackCastleQueenSide() && to === 61)) {
       const kingToMask = u64_shl(1n, BigInt(to))
@@ -1349,6 +1450,16 @@ export default class BitBoard {
       normalMoves: normalMoves,
       captureMoves: captureMoves
     }
+  }
+
+  canPawnPromote(color: PieceColor): boolean {
+    const rank8Mask: bigint = 0xFF00000000000000n
+    const rank1Mask: bigint = 0x00000000000000FFn
+
+    const val: bigint = color === PieceColor.WHITE ? u64_and(rank8Mask, this.piecesPosition[BitboardIndex.WhitePawns]) : 
+                                                      u64_and(rank1Mask, this.piecesPosition[BitboardIndex.BlackPawns])
+
+    return val !== 0n                         
   }
 
   getCheckmate(): PieceColor | null {

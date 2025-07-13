@@ -11,6 +11,7 @@ import { FrontendBoard, Position, ValidMovesFrontend } from "@/app/types/global.
 import { Piece } from "@/app/types/global.interfaces"
 import { PieceColor, PieceType } from "@/app/types/global.enums"
 import ClientGame from "@/app/lib/ClientGame"
+import PromotionModal from "./Promotion"
 
 export default function VisualBoard() {
 
@@ -31,6 +32,7 @@ export default function VisualBoard() {
   const [previousMoves, setPreviousMoves] = useState<Array<Position>>([])
   const [turn, setTurn] = useState<PieceColor>(game.getTurn())
   const [checkmate, setCheckmate] = useState<PieceColor | null>(null)
+  const [showPromotionalModal, setshowPromotionalModal] = useState<boolean>(false)
 
 
   useEffect(() : void => {
@@ -43,6 +45,7 @@ export default function VisualBoard() {
     
       // do this if piece is already selected
       try {
+        // only move when clicked in empty suares or enemy piece
         if(selectedPiece !== null && (currentPiece === null || currentPiece.getColor() !== turn)) {
           game.moveAPiece(selectedPosition, position, selectedPiece.getType(), selectedPiece.getColor())
           setBoard(game.getBoard())
@@ -55,6 +58,10 @@ export default function VisualBoard() {
           const prevMoves = game.getPreviousMove()
           setPreviousMoves([{row: prevMoves[0].row, col: prevMoves[0].col},
                             {row: prevMoves[1].row, col: prevMoves[1].col}])
+          
+          if(game.canPawnPromote(turn)) {
+            setshowPromotionalModal(true)
+          }
           return
         }
       } catch(e) {
@@ -77,10 +84,6 @@ export default function VisualBoard() {
       setValidMoves(normalMoves)
       setAttackMoves(attackMoves)
   }
-
-  useEffect(() => {
-    console.log("test")
-  }, [previousMoves])
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {
     if(piece === null) return
@@ -109,12 +112,26 @@ export default function VisualBoard() {
     }
   }
 
+  function promotePawn(color: PieceColor, type: PieceType): void {
+    console.log(color, " ", type)
+    game.promoteAPawn(color, type)
+    setBoard(game.getBoard())
+    setSelectedPiece(null)
+    setSelectedPosition({row: -1, col: -1})
+    setValidMoves([])
+    setAttackMoves([])
+    setTurn(game.getTurn())
+    setCheckmate(game.getCheckmate())
+    setshowPromotionalModal(false)
+  }
+
   return (
     <>
     <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
       <div>Here is where chat goes</div>
       <div className="w-full">
         <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
+        {showPromotionalModal ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
         {board.map((row: Array<Piece|null>, rowIndex: number) => {
           return( 
             <div 
