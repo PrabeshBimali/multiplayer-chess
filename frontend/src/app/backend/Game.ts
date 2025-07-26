@@ -69,6 +69,7 @@ export default class Game {
     const position = this.positionToBitBoardIndex(piecesPos.row, piecesPos.col)
     return this.bitboard.getValidSquaresForFrontend(position, type, color)
   }
+
   
   getFen(): string {
     return this.fen
