@@ -1,10 +1,10 @@
-import Game from "../backend/Game";
-import { ValidMoves } from "../backend/types/backend.type";
+import Game from "../chess-engine/Game";
+import { ValidMoves } from "../chess-engine/types/backend.type";
 import { PieceColor, PieceType } from "../types/global.enums";
 import { FrontendBoard, Position, PreviousMove, ValidMovesFrontend } from "../types/global.types";
 import Board from "./Board";
 
-export default class ClientGame {
+export default class SinglePlayerGameClient {
   private backendGame: Game = new  Game()
   private turn: PieceColor = this.backendGame.getTurn()
   private fen: string = this.backendGame.getFen()

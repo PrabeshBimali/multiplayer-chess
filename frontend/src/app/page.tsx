@@ -1,18 +1,46 @@
 "use client"
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import CreateNewGameModal from "./ui/components/CreateNewGameModal";
 import { useRouter } from "next/navigation";
 import ShareGameLinkModal from "./ui/components/ShareGameLinkModal";
+import { useSocket } from "./context/SocketProvider";
 
 export default function Home() {
+  const socket = useSocket()
   
   const [openCreateGameModal, setOpenCreateGameModal] = useState<boolean>(false)
   const [openShareGameLinkModal, setOpenShareGameLinkModal] = useState<boolean>(false)
   const [multiplayerGameCode, setMultiplayerGameCode] = useState<string>("")
   const router = useRouter()
 
+  useEffect(() => {
+    if (!socket) return
+    
+
+    const handleGameJoin = (gameid: string, playerid: string) => {
+      socket.emit("join-game", {gameid, playerid})
+    }
+
+    const gameid = localStorage.getItem("gameid")
+    const playerid = localStorage.getItem("playerid")
+
+    if(gameid && playerid) {
+      handleGameJoin(gameid, playerid)
+    }
+    
+    socket.on("player-joined", ({gameid}) => {
+
+      const storedGameId = localStorage.getItem("gameid")
+
+      if(gameid === storedGameId) {
+        router.push(`/game/${gameid}`)
+      } 
+    })
+
+  }, [socket])
+
   function navigateToSinglePlayerChess() {
-    router.push("/chess")
+    router.push("/local-chess")
   }
 
   return (

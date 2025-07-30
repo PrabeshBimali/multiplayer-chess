@@ -6,12 +6,13 @@ import { useRouter } from "next/navigation"
 interface JoinNewGameModalProps {
   color: PieceColor | null
   gameid: string
+  setOpenJoinNewGameModal: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 
 export default function JoinNewGameModal(props: JoinNewGameModalProps) {
 
-  const { color, gameid } = props
+  const { color, gameid, setOpenJoinNewGameModal } = props
 
   const socket = useSocket()
   const router = useRouter()
@@ -27,13 +28,15 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
       localStorage.setItem("gameid", gameid)
       localStorage.setItem("playerid", playerid)
       localStorage.setItem("color", color)
-
-      router.refresh()
+      
+      setOpenJoinNewGameModal(false)
       router.push(`/game/${gameid}`)
     }
 
-    const handleFail = () => {
+    const handleFail = (gameid: string) => {
       alert("Failed to join game. Game might have already started.")
+      setOpenJoinNewGameModal(false)
+      router.push(`/game/${gameid}`)
     }
 
     socket.on("join-success", handleSuccess)
@@ -43,7 +46,7 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
       socket.off("join-success", handleSuccess)
       socket.off("join-fail", handleFail)
     }
-  }, [socket, router])
+  }, [socket])
 
   const joinGame = () => {
     setJoining(true)
@@ -58,8 +61,8 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
         className="absolute inset-0 bg-black opacity-90"></div>
         <div className="relative p-6 rounded-xl shadow-xl flex flex-col gap-4 items-center bg-gray-800">
         <h2 className="text-xl font-semibold text-white flex items-center">Join New Game</h2>
-        <p>Your Color: {color?.toUpperCase()}</p>
-        <p>Game Type: Standard</p>
+        <p className="text-white">Your Color: {color?.toUpperCase()}</p>
+        <p className="text-white">Game Type: Standard</p>
         <button 
           className="bg-lime-600 text-white font-bold text-xl cursor-pointer hover:bg-lime-500 p-2 rounded-sm"
           onClick={joinGame}

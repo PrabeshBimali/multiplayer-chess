@@ -10,19 +10,19 @@ import King from "./pieces/King"
 import { FrontendBoard, Position, ValidMovesFrontend } from "@/app/types/global.types"
 import { Piece } from "@/app/types/global.interfaces"
 import { PieceColor, PieceType } from "@/app/types/global.enums"
-import ClientGame from "@/app/lib/ClientGame"
 import PromotionModal from "./Promotion"
+import SinglePlayerGameClient from "@/app/lib/SinglePlayerGameClient"
 
-export default function VisualBoard() {
+export default function SiglePlayerChessBoard() {
 
-  const gameRef = useRef<ClientGame | null>(null)
+  const gameRef = useRef<SinglePlayerGameClient | null>(null)
 
   if (gameRef.current === null) {
-    gameRef.current = new ClientGame()
+    gameRef.current = new SinglePlayerGameClient()
   }
   const game = gameRef.current
   const initialBoardState: FrontendBoard = game.getBoard()
-  const pieceSize: number = 60
+  const pieceSize: number = 50
 
   const [board, setBoard] = useState<FrontendBoard>([])
   const [selectedPosition, setSelectedPosition] = useState<Position>({row: -1, col: -1})
@@ -127,55 +127,55 @@ export default function VisualBoard() {
 
   return (
     <>
-    <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
-      <div>Here is where chat goes</div>
-      <div className="w-full">
-        <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
-        {showPromotionalModal ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
-        {board.map((row: Array<Piece|null>, rowIndex: number) => {
-          return( 
-            <div 
-              className={`grid grid-cols-8`}
-              key={rowIndex}
-            >
-              {row.map((piece: Piece | null, colIndex: number) => {
+      <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
+        <div className="order-3 2xl:order-1">Here is where chat goes</div>
+        <div className="w-full order-1 2xl:order-2">
+          <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
+          {showPromotionalModal ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
+          {board.map((row: Array<Piece|null>, rowIndex: number) => {
+            return( 
+              <div 
+                className={`grid grid-cols-8`}
+                key={rowIndex}
+              >
+                {row.map((piece: Piece | null, colIndex: number) => {
 
-                const isSelected: boolean = rowIndex === selectedPosition?.row && colIndex === selectedPosition?.col
-                const isValidMoveForSelectedPiece: boolean = validMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
-                const isAttackMoveForSelectedPiece: boolean = attackMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
-                const isPreviousMoves: boolean = previousMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
-                const linearPosition = rowIndex + colIndex
-                return (
-                  <div 
-                    key={linearPosition} 
-                    className=
-                      {`
-                        aspect-square flex justify-center items-center
-                        ${piece !== null ? "cursor-pointer": ""}
-                        ${((linearPosition)%2 === 0) ? "bg-chess1-light" : "bg-chess1-dark"}
-                        ${isSelected ? "bg-green-900 opacity-80" : ""}
-                        ${isPreviousMoves && !isAttackMoveForSelectedPiece ? ((linearPosition)%2 === 0 ? "bg-lime-200": "bg-green-600 opacity-80") : ""}
-                        ${isAttackMoveForSelectedPiece ? (linearPosition%2 === 0 ? "bg-red-300" : "bg-red-400"): ""}
-                      `}
-                    onClick={() => handleSquareClicked(rowIndex, colIndex)}
-                  >
-                    {renderPieces(piece)}
-                    { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-800 rounded-full opacity-80"></div> : ""}
-                  </div>
-                )
-              })}
+                  const isSelected: boolean = rowIndex === selectedPosition?.row && colIndex === selectedPosition?.col
+                  const isValidMoveForSelectedPiece: boolean = validMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                  const isAttackMoveForSelectedPiece: boolean = attackMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                  const isPreviousMoves: boolean = previousMoves.some((pos) => pos.row === rowIndex && pos.col === colIndex)
+                  const linearPosition = rowIndex + colIndex
+                  return (
+                    <div 
+                      key={linearPosition} 
+                      className=
+                        {`
+                          aspect-square flex justify-center items-center
+                          ${piece !== null ? "cursor-pointer": ""}
+                          ${((linearPosition)%2 === 0) ? "bg-chess1-light" : "bg-chess1-dark"}
+                          ${isSelected ? "bg-green-900 opacity-80" : ""}
+                          ${isPreviousMoves && !isAttackMoveForSelectedPiece ? ((linearPosition)%2 === 0 ? "bg-lime-200": "bg-green-600 opacity-80") : ""}
+                          ${isAttackMoveForSelectedPiece ? (linearPosition%2 === 0 ? "bg-red-300" : "bg-red-400"): ""}
+                        `}
+                      onClick={() => handleSquareClicked(rowIndex, colIndex)}
+                    >
+                      {renderPieces(piece)}
+                      { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-800 rounded-full opacity-80"></div> : ""}
+                    </div>
+                  )
+                })}
+            </div>
+            )
+          })}
+          <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
+        </div>
+        <div className="order-2 2xl:order-3">
+          <div>Turn: {turn}</div>
+          <div className={`${checkmate === null ? "text-white" : "text-black"}`}>
+            {checkmate === PieceColor.WHITE ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
           </div>
-          )
-        })}
-        <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
-      </div>
-      <div>
-        <div>Turn: {turn}</div>
-        <div className={`${checkmate === null ? "text-white" : "text-black"}`}>
-          {checkmate === PieceColor.WHITE ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
         </div>
       </div>
-    </div>
     </>
   )
 }
