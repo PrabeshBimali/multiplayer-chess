@@ -15,10 +15,18 @@ import Board from "@/app/lib/Board"
 import { useSocket } from "@/app/context/SocketProvider"
 import { ValidMoves } from "@/app/chess-engine/types/backend.type"
 import CheckmateModal from "../CheckmateModal"
+import { useToast } from "@/app/context/ToastProvider"
 
-export default function MultiplayerChessBoard() {
+interface MultiplayerChessBoardProps {
+  openJoinNewGameModal: boolean
+}
+
+export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps) {
+
+  const { openJoinNewGameModal } = props
 
   const socket = useSocket()
+  const { addToast } = useToast()
 
   const pieceSize: number = 50
 
@@ -56,6 +64,10 @@ export default function MultiplayerChessBoard() {
         { row: previousMove.to.row, col: previousMove.to.col },
       ])
     }
+  }, [])
+
+  const handleMoveError = useCallback((error: string) => {
+    addToast(error, "warning", 3000)
   }, [])
   
   const bitboardIndexToPosition = (index: number): Position => {
@@ -124,12 +136,14 @@ export default function MultiplayerChessBoard() {
     socket.on("valid-moves-success", handleValidMovesSuccess)
     socket.on("pawn-can-promote", handlePromotePawn)
     socket.on("promote-success", handlePromoteSuccess)
+    socket.on("move-error", handleMoveError)
 
     return () => {
       socket.off("move-success", handleMoveSuccess)
       socket.off("valid-moves-success", handleValidMovesSuccess)
       socket.off("pawn-can-promote", handlePromotePawn)
       socket.off("promote-success", handlePromoteSuccess)
+      socket.off("move-error", handleMoveError)
     }
   }, [socket])
   
@@ -196,7 +210,7 @@ export default function MultiplayerChessBoard() {
     }
 
     initializeGame()
-  }, [])
+  }, [openJoinNewGameModal])
 
   useEffect((): void => {
     if(checkmate) {

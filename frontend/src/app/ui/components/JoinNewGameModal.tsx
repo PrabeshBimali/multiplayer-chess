@@ -30,13 +30,11 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
       localStorage.setItem("color", color)
       
       setOpenJoinNewGameModal(false)
-      router.push(`/game/${gameid}`)
+      router.refresh()
     }
 
     const handleFail = (gameid: string) => {
       alert("Failed to join game. Game might have already started.")
-      setOpenJoinNewGameModal(false)
-      router.push(`/game/${gameid}`)
     }
 
     socket.on("join-success", handleSuccess)

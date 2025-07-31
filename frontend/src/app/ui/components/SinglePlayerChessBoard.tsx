@@ -12,8 +12,11 @@ import { Piece } from "@/app/types/global.interfaces"
 import { PieceColor, PieceType } from "@/app/types/global.enums"
 import PromotionModal from "./Promotion"
 import SinglePlayerGameClient from "@/app/lib/SinglePlayerGameClient"
+import { useToast } from "@/app/context/ToastProvider"
 
 export default function SiglePlayerChessBoard() {
+
+  const { addToast } = useToast()
 
   const gameRef = useRef<SinglePlayerGameClient | null>(null)
 
@@ -40,6 +43,7 @@ export default function SiglePlayerChessBoard() {
   }, [])
 
   function handleSquareClicked(row: number, col: number) {
+      addToast("King in Check", "error", 3000)
       const position: Position = {row: row, col: col}
       const currentPiece: Piece | null = board[position.row][position.col]
     

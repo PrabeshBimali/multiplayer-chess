@@ -122,7 +122,9 @@ export default function Page() {
             Chat Component here
           </div>
           <div className="order-1 2xl:order-2">
-            <MultiplayerChessBoard/>
+            <MultiplayerChessBoard
+              openJoinNewGameModal={openJoinNewGameModal}
+            />
           </div>
           <div className="order-2 2xl:order-3">
             Information component here

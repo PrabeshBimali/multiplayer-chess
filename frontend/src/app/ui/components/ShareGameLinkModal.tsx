@@ -1,3 +1,4 @@
+import { useToast } from "@/app/context/ToastProvider";
 import React from "react";
 
 interface ShareGameLinkModalProps {
@@ -6,6 +7,8 @@ interface ShareGameLinkModalProps {
 }
 
 export default function ShareGameLinkModal(props: ShareGameLinkModalProps) {
+
+  const { addToast } = useToast()
 
   const {setOpenShareGameLinkModal, multiplayerGameCode} = props
   const url = `${window.location.origin}/game/${multiplayerGameCode}`
@@ -30,6 +33,7 @@ export default function ShareGameLinkModal(props: ShareGameLinkModalProps) {
           <button
             onClick={() => {
               navigator.clipboard.writeText(url);
+              addToast("Link Copied!", "success", 2000)
             }}
             className="px-3 py-2 cursor-pointer bg-lime-600 hover:bg-lime-500 text-white text-sm rounded-lg"
           >
