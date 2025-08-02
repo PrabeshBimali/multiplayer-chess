@@ -7,12 +7,13 @@ interface JoinNewGameModalProps {
   color: PieceColor | null
   gameid: string
   setOpenJoinNewGameModal: React.Dispatch<React.SetStateAction<boolean>>
+  setNewPlayerJoined: React.Dispatch<React.SetStateAction<boolean>>
 }
 
 
 export default function JoinNewGameModal(props: JoinNewGameModalProps) {
 
-  const { color, gameid, setOpenJoinNewGameModal } = props
+  const { color, gameid, setOpenJoinNewGameModal, setNewPlayerJoined } = props
 
   const socket = useSocket()
   const router = useRouter()
@@ -30,6 +31,7 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
       localStorage.setItem("color", color)
       
       setOpenJoinNewGameModal(false)
+      setNewPlayerJoined(true)
       router.refresh()
     }
 

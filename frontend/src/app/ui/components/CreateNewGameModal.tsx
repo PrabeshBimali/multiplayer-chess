@@ -5,6 +5,7 @@ import BlackQueenIcon from "./images/BlackQueenIcon"
 import WhiteQueenIcon from "./images/WhiteQueenIcon"
 import { PieceColor } from "@/app/types/global.enums"
 import { useSocket } from "@/app/context/SocketProvider"
+import { useToast } from "@/app/context/ToastProvider"
 
 interface CreateNewGameModalProps {
   setOpenCreateGameModal: React.Dispatch<React.SetStateAction<boolean>>
@@ -13,6 +14,8 @@ interface CreateNewGameModalProps {
 }
 
 export default function CreateNewGameModal(props: CreateNewGameModalProps) {
+
+  const { addToast } = useToast()
   
   const socket = useSocket()
 
@@ -83,7 +86,7 @@ export default function CreateNewGameModal(props: CreateNewGameModalProps) {
       })
 
       if(!response.ok) {
-        console.log("bad response")
+        addToast("Server Error", "error")
         throw new Error(`HTTP ERROR! status: ${response.status}`)
       }
 
@@ -102,7 +105,7 @@ export default function CreateNewGameModal(props: CreateNewGameModalProps) {
         socket.emit("join-game", { gameid, playerid }) 
       }
     } catch(e) {
-
+      addToast("Could not Create New Game", "error")
       console.error(e)
 
     } finally {

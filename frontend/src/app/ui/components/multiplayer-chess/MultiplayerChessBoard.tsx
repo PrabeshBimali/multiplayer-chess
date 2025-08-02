@@ -18,12 +18,12 @@ import CheckmateModal from "../CheckmateModal"
 import { useToast } from "@/app/context/ToastProvider"
 
 interface MultiplayerChessBoardProps {
-  openJoinNewGameModal: boolean
+  newPlayerJoined: boolean
 }
 
 export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps) {
 
-  const { openJoinNewGameModal } = props
+  const { newPlayerJoined } = props
 
   const socket = useSocket()
   const { addToast } = useToast()
@@ -210,7 +210,7 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
     }
 
     initializeGame()
-  }, [openJoinNewGameModal])
+  }, [newPlayerJoined])
 
   useEffect((): void => {
     if(checkmate) {
@@ -316,8 +316,7 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
             <CheckmateModal checkmateColor={checkmate} playerColor={myColor} setOpenCheckmateModal={setOpenCheckmateModal}/> : 
             ""
         }
-        <div className="w-full order-1 2xl:order-2">
-          <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
+        <div className={`w-full order-1 2xl:order-2 ${myColor === PieceColor.BLACK ? "rotate-180" : ""}`}>
           {showPromotionalModal && turn !== null ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
           {board.map((row: Array<Piece|null>, rowIndex: number) => {
             return( 
@@ -346,7 +345,9 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
                         `}
                       onClick={() => handleSquareClicked(rowIndex, colIndex)}
                     >
-                      {renderPieces(piece)}
+                      <div className={`${myColor === PieceColor.BLACK ? "rotate-180" : ""}`}>
+                        {renderPieces(piece)}
+                      </div>
                       { isValidMoveForSelectedPiece ? <div className="w-1/3 h-1/3 bg-green-800 rounded-full opacity-80"></div> : ""}
                     </div>
                   )
@@ -354,7 +355,9 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
             </div>
             )
           })}
-          <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
+        </div>
+        <div className="text-white font-semibold bg-gray-900 inline-block py-1 px-2 rouned-sm">
+          Turn: {myColor === turn ? "Your turn" : "Opponent's Turn"}
         </div>
     </>
   )

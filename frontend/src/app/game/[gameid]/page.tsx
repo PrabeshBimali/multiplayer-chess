@@ -4,6 +4,7 @@ import { useSocket } from "@/app/context/SocketProvider"
 import { PieceColor } from "@/app/types/global.enums"
 import GameNotFoundModal from "@/app/ui/components/GameNotFoundModal"
 import JoinNewGameModal from "@/app/ui/components/JoinNewGameModal"
+import MultiplayerChat from "@/app/ui/components/multiplayer-chess/MultiplayerChat"
 import MultiplayerChessBoard from "@/app/ui/components/multiplayer-chess/MultiplayerChessBoard"
 import WaitingForOpponentToJoinModal from "@/app/ui/components/WaitingForOpponentToJoinModal"
 import  { useParams } from "next/navigation"
@@ -14,6 +15,7 @@ export default function Page() {
   const params = useParams()
   const [openWaitingForOpponentToJoinModal, setOpenWaitingForOpponentToJoinModal] = useState<boolean>(false)
   const [openJoinNewGameModal, setOpenJoinNewGameModal] = useState<boolean>(false)
+  const [newPlayerJoined, setNewPlayerJoined] = useState<boolean>(false)
   const [openGameNotFoundModal, setOpenGameNotFoundModal] = useState<boolean>(false)
   const [pageLoading, setPageLoading] = useState<boolean>(true)
   const [errorWhenJoining, setErrorWhenJoining] = useState<boolean>(false)
@@ -115,15 +117,23 @@ export default function Page() {
     <>
       {openGameNotFoundModal ? <GameNotFoundModal/> : ""}
       {openWaitingForOpponentToJoinModal ? <WaitingForOpponentToJoinModal/> : ""}
-      {openJoinNewGameModal ? <JoinNewGameModal color={colorForJoiningPlayer} gameid={gameid} setOpenJoinNewGameModal={setOpenJoinNewGameModal}/> : ""}
+      {openJoinNewGameModal ? 
+        <JoinNewGameModal 
+          color={colorForJoiningPlayer} 
+          gameid={gameid} 
+          setOpenJoinNewGameModal={setOpenJoinNewGameModal}
+          setNewPlayerJoined={setNewPlayerJoined}
+        /> 
+        : ""
+      }
       {!pageLoading && !errorWhenJoining && 
-        <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
+        <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5 my-5 mx-5">
           <div className="order-3 2xl:order-1">
-            Chat Component here
+            <MultiplayerChat newPlayerJoined={newPlayerJoined}/>
           </div>
           <div className="order-1 2xl:order-2">
             <MultiplayerChessBoard
-              openJoinNewGameModal={openJoinNewGameModal}
+              newPlayerJoined={newPlayerJoined}
             />
           </div>
           <div className="order-2 2xl:order-3">
