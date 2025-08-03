@@ -43,7 +43,6 @@ export default function SiglePlayerChessBoard() {
   }, [])
 
   function handleSquareClicked(row: number, col: number) {
-      addToast("King in Check", "error", 3000)
       const position: Position = {row: row, col: col}
       const currentPiece: Piece | null = board[position.row][position.col]
     
@@ -176,7 +175,7 @@ export default function SiglePlayerChessBoard() {
         <div className="order-2 2xl:order-3">
           <div>Turn: {turn}</div>
           <div className={`${checkmate === null ? "text-white" : "text-black"}`}>
-            {checkmate === PieceColor.WHITE ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
+            {checkmate === PieceColor.WHITE && checkmate !== null ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
           </div>
         </div>
       </div>
