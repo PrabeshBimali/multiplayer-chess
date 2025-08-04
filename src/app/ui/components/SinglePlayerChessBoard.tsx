@@ -13,6 +13,8 @@ import { PieceColor, PieceType } from "@/app/types/global.enums"
 import PromotionModal from "./Promotion"
 import SinglePlayerGameClient from "@/app/lib/SinglePlayerGameClient"
 import { useToast } from "@/app/context/ToastProvider"
+import { ChessClientError } from "@/app/errors/chessErrors"
+import CheckmateModal from "./CheckmateModal"
 
 export default function SiglePlayerChessBoard() {
 
@@ -36,6 +38,7 @@ export default function SiglePlayerChessBoard() {
   const [turn, setTurn] = useState<PieceColor>(game.getTurn())
   const [checkmate, setCheckmate] = useState<PieceColor | null>(null)
   const [showPromotionalModal, setshowPromotionalModal] = useState<boolean>(false)
+  const [openCheckmateModal, setOpenCheckmateModal] = useState<boolean>(false)
 
 
   useEffect(() : void => {
@@ -68,6 +71,10 @@ export default function SiglePlayerChessBoard() {
           return
         }
       } catch(e) {
+        if(e instanceof ChessClientError) {
+          addToast(e.message, "warning")
+        }
+
         console.error(e)
       }
       
@@ -87,6 +94,10 @@ export default function SiglePlayerChessBoard() {
       setValidMoves(normalMoves)
       setAttackMoves(attackMoves)
   }
+
+  useEffect(() => {
+    setOpenCheckmateModal(true)
+  }, [checkmate])
 
   function renderPieces(piece: Piece | null): ReactElement | undefined {
     if(piece === null) return
@@ -130,8 +141,15 @@ export default function SiglePlayerChessBoard() {
 
   return (
     <>
-      <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5">
-        <div className="order-3 2xl:order-1">Here is where chat goes</div>
+      {
+        openCheckmateModal && checkmate !== null ? 
+          <CheckmateModal checkmateColor={checkmate} playerColor={turn} multiplayer={false} setOpenCheckmateModal={setOpenCheckmateModal}/> :
+          ""
+      }
+      <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5 text-white">
+        <div className="order-3 2xl:order-1">
+
+        </div>
         <div className="w-full order-1 2xl:order-2">
           <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
           {showPromotionalModal ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
@@ -172,10 +190,10 @@ export default function SiglePlayerChessBoard() {
           })}
           <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
         </div>
-        <div className="order-2 2xl:order-3">
+        <div className="order-2 2xl:order-3 text-white">
           <div>Turn: {turn}</div>
           <div className={`${checkmate === null ? "text-white" : "text-black"}`}>
-            {checkmate === PieceColor.WHITE && checkmate !== null ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
+            {checkmate === null ? ""  : checkmate === PieceColor.WHITE ? "White checkmate, Black Wins!" : "Black checkmate, White Wins!"}
           </div>
         </div>
       </div>

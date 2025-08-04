@@ -4,13 +4,15 @@ import Link from "next/link";
 interface CheckmateModalProps {
   playerColor: PieceColor
   checkmateColor: PieceColor,
+  multiplayer: boolean,
   setOpenCheckmateModal: React.Dispatch<React.SetStateAction<boolean>>
 } 
 
 
 export default function CheckmateModal(props: CheckmateModalProps) {
 
-  const { playerColor, checkmateColor, setOpenCheckmateModal } = props
+  const { playerColor, checkmateColor, multiplayer, setOpenCheckmateModal } = props
+  const opponentColor = playerColor === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
 
   function closeModal() {
     setOpenCheckmateModal(false)
@@ -25,7 +27,7 @@ export default function CheckmateModal(props: CheckmateModalProps) {
           {checkmateColor.toUpperCase()} King Checkmate
         </h2>
         <h2 className="text-md font-semibold text-white">
-          {checkmateColor === playerColor ? "You Lost!" : "You Won!"}
+          { checkmateColor === playerColor ? (multiplayer ? "You Lost!" : `${opponentColor.toUpperCase()} Won!`) : (multiplayer ? "You Won!" : `${playerColor.toUpperCase()} Won!`)}
         </h2>
         <button
           className="bg-lime-600 text-white font-bold text-xl cursor-pointer hover:bg-lime-500 px-3 py-1 rounded-sm"

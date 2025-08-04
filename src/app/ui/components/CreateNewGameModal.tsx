@@ -85,8 +85,12 @@ export default function CreateNewGameModal(props: CreateNewGameModalProps) {
         })
       })
 
+      if(response.status === 429) {
+        addToast("Too many Requests!", "error")
+        return
+      }
+
       if(!response.ok) {
-        addToast("Server Error", "error")
         throw new Error(`HTTP ERROR! status: ${response.status}`)
       }
 

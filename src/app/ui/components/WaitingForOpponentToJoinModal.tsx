@@ -11,6 +11,9 @@ export default function WaitingForOpponentToJoinModal() {
             <span className="animate-bounce [animation-delay:0.4s]">.</span>
           </span>
         </h2>
+        <p className="text-white text-xs">
+          (please refresh the page if opponent has joined)
+        </p>
       </div>
     </div>
   )

@@ -2,26 +2,29 @@
 
 import { useSocket } from "@/app/context/SocketProvider"
 import { PieceColor } from "@/app/types/global.enums"
+import EndGameModal from "@/app/ui/components/EndGameModal"
 import GameNotFoundModal from "@/app/ui/components/GameNotFoundModal"
 import JoinNewGameModal from "@/app/ui/components/JoinNewGameModal"
 import MultiplayerChat from "@/app/ui/components/multiplayer-chess/MultiplayerChat"
 import MultiplayerChessBoard from "@/app/ui/components/multiplayer-chess/MultiplayerChessBoard"
+import MultiplayerInfo from "@/app/ui/components/multiplayer-chess/MultiplayerInfo"
 import WaitingForOpponentToJoinModal from "@/app/ui/components/WaitingForOpponentToJoinModal"
-import  { useParams } from "next/navigation"
+import  { useParams, useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export default function Page() {
   const socket = useSocket()
   const params = useParams()
+  const router = useRouter()
   const [openWaitingForOpponentToJoinModal, setOpenWaitingForOpponentToJoinModal] = useState<boolean>(false)
   const [openJoinNewGameModal, setOpenJoinNewGameModal] = useState<boolean>(false)
   const [newPlayerJoined, setNewPlayerJoined] = useState<boolean>(false)
   const [openGameNotFoundModal, setOpenGameNotFoundModal] = useState<boolean>(false)
+  const [openEndGameModal, setOpenEndGameModal] = useState<boolean>(false)
   const [pageLoading, setPageLoading] = useState<boolean>(true)
   const [errorWhenJoining, setErrorWhenJoining] = useState<boolean>(false)
   const [colorForJoiningPlayer, setColorForJoiningPlayer] = useState<PieceColor | null>(null)
   const [gameid, setGameid] = useState<string>("")
-  
 
   useEffect(() => {
     if (!socket) return
@@ -115,6 +118,7 @@ export default function Page() {
 
   return (
     <>
+      {openEndGameModal ? <EndGameModal setOpenEndGameModal={setOpenEndGameModal}/> : ""}
       {openGameNotFoundModal ? <GameNotFoundModal/> : ""}
       {openWaitingForOpponentToJoinModal ? <WaitingForOpponentToJoinModal/> : ""}
       {openJoinNewGameModal ? 
@@ -137,7 +141,7 @@ export default function Page() {
             />
           </div>
           <div className="order-2 2xl:order-3">
-            Information component here
+            <MultiplayerInfo setOpenEndGameModal={setOpenEndGameModal}/>
           </div>
         </div>
       }

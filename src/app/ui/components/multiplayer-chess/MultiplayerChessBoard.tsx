@@ -1,6 +1,6 @@
 "use client"
 
-import { ReactElement, useEffect, useState, useRef, useCallback } from "react"
+import { ReactElement, useEffect, useState, useCallback } from "react"
 import Pawn from "../pieces/Pawn"
 import Rook from "../pieces/Rook"
 import Knight from "../pieces/Knight"
@@ -313,7 +313,7 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
     <>
         {
           openCheckmateModal && checkmate !== null && myColor !== null ? 
-            <CheckmateModal checkmateColor={checkmate} playerColor={myColor} setOpenCheckmateModal={setOpenCheckmateModal}/> : 
+            <CheckmateModal checkmateColor={checkmate} playerColor={myColor} setOpenCheckmateModal={setOpenCheckmateModal} multiplayer={true}/> : 
             ""
         }
         <div className={`w-full order-1 2xl:order-2 ${myColor === PieceColor.BLACK ? "rotate-180" : ""}`}>

@@ -2,6 +2,7 @@ import { PieceColor, PieceType } from "../types/global.enums";
 import { ValidMoves, Move } from "./types/backend.type";
 import { u64_and, u64_not, u64_or, u64_shl, u64_shr, u64_sub } from "./helpers/uInt64.operations"
 import { BitboardIndex, indexToFENChar } from "./types/backend.enums"
+import { ChessClientError } from "../errors/chessErrors";
 
 export default class BitBoard {
   private piecesPosition: BigUint64Array = new BigUint64Array(12)
@@ -274,7 +275,7 @@ export default class BitBoard {
     const pawnMoves = this.generatePawnMoves(from, PieceColor.WHITE);
 
     if (u64_and(pawnMoves, toMask) === 0n) {
-      throw new Error("Illegal Pawn move");
+      throw new ChessClientError("Invalid Pawn move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -321,7 +322,7 @@ export default class BitBoard {
     const pawnMoves = this.generatePawnMoves(from, PieceColor.BLACK);
 
     if (u64_and(pawnMoves, toMask) === 0n) {
-      throw new Error("Illegal Pawn move");
+      throw new ChessClientError("Invalid Pawn move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -504,7 +505,7 @@ export default class BitBoard {
     const rookMoves = this.generateRookMoves(from, PieceColor.WHITE);
 
     if (u64_and(rookMoves, toMask) === 0n) {
-      throw new Error("Illegal Rook move");
+      throw new ChessClientError("Invalid Rook move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -547,7 +548,7 @@ export default class BitBoard {
     const rookMoves = this.generateRookMoves(from, PieceColor.BLACK);
 
     if (u64_and(rookMoves, toMask) === 0n) {
-      throw new Error("Illegal Rook move");
+      throw new ChessClientError("Invalid Rook move");
     }
 
     // 3. If capturing, remove white piece from correct board
@@ -632,7 +633,7 @@ export default class BitBoard {
     const bishopMoves = this.generateBishopMoves(from, PieceColor.WHITE);
 
     if (u64_and(bishopMoves, toMask) === 0n) {
-      throw new Error("Illegal Bishop move");
+      throw new ChessClientError("Invalid Bishop move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -670,7 +671,7 @@ export default class BitBoard {
     const bishopMoves = this.generateBishopMoves(from, PieceColor.BLACK);
 
     if (u64_and(bishopMoves, toMask) === 0n) {
-      throw new Error("Illegal Bishop move");
+      throw new ChessClientError("Invalid Bishop move");
     }
 
     // 3. If capturing, remove white piece from correct board
@@ -714,7 +715,7 @@ export default class BitBoard {
     const queenMoves = this.generateQueenMoves(from, PieceColor.WHITE);
 
     if (u64_and(queenMoves, toMask) === 0n) {
-      throw new Error("Illegal Queen move");
+      throw new ChessClientError("Invalid Queen move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -752,7 +753,7 @@ export default class BitBoard {
     const queenMoves = this.generateQueenMoves(from, PieceColor.BLACK);
 
     if (u64_and(queenMoves, toMask) === 0n) {
-      throw new Error("Illegal Queen move");
+      throw new ChessClientError("Invalid Queen move");
     }
 
     // 3. If capturing, remove white piece from correct board
@@ -849,7 +850,7 @@ export default class BitBoard {
     const knightMoves = this.generateKnightMoves(from, PieceColor.WHITE);
 
     if (u64_and(knightMoves, toMask) === 0n) {
-      throw new Error("Illegal Knight move");
+      throw new ChessClientError("Invalid Knight move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -887,7 +888,7 @@ export default class BitBoard {
     const knightMoves = this.generateKnightMoves(from, PieceColor.BLACK);
 
     if (u64_and(knightMoves, toMask) === 0n) {
-      throw new Error("Illegal Knight move");
+      throw new ChessClientError("Invalid Knight move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -1176,7 +1177,7 @@ export default class BitBoard {
     const kingMoves = this.generateKingAttacks(from, PieceColor.WHITE);
 
     if (u64_and(kingMoves, toMask) === 0n) {
-      throw new Error("Illegal King move");
+      throw new ChessClientError("Invalid King move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -1234,7 +1235,7 @@ export default class BitBoard {
     const kingMoves = this.generateKingAttacks(from, PieceColor.BLACK);
 
     if (u64_and(kingMoves, toMask) === 0n) {
-      throw new Error("Illegal King move");
+      throw new ChessClientError("Invalid King move");
     }
 
     // 3. If capturing, remove black piece from correct board
@@ -1369,7 +1370,7 @@ export default class BitBoard {
 
     if(this.isInCheck(move.color)) {
       this.undoMove()
-      throw new Error(`King in check, try other move`)
+      throw new ChessClientError(`${move.color.toUpperCase()} King in check, try other move`)
     }
 
     // backup this state if move is correct
