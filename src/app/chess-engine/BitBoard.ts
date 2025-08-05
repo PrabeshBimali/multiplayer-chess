@@ -1387,7 +1387,12 @@ export default class BitBoard {
       throw new Error(`${this.checkmate} king Checkmate. Game Over!`)
     }
     // reset en passant squares before move
-    move.color === PieceColor.WHITE ? this.whiteEnPassantSquares = 0n : this.blackEnPassantSquares = 0n
+    if(move.color === PieceColor.WHITE) {
+      this.whiteEnPassantSquares = 0n
+    } else {
+      this.blackEnPassantSquares = 0n
+    }
+
     this.simulateMove(move)
     const enemyColor = move.color === PieceColor.WHITE ? PieceColor.BLACK : PieceColor.WHITE
 

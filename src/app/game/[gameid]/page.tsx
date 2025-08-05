@@ -9,7 +9,7 @@ import MultiplayerChat from "@/app/ui/components/multiplayer-chess/MultiplayerCh
 import MultiplayerChessBoard from "@/app/ui/components/multiplayer-chess/MultiplayerChessBoard"
 import MultiplayerInfo from "@/app/ui/components/multiplayer-chess/MultiplayerInfo"
 import WaitingForOpponentToJoinModal from "@/app/ui/components/WaitingForOpponentToJoinModal"
-import  { useParams, useRouter } from "next/navigation"
+import  { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 
 export default function Page() {
