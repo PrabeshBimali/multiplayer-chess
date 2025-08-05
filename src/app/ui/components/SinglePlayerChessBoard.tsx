@@ -146,12 +146,38 @@ export default function SiglePlayerChessBoard() {
           <CheckmateModal checkmateColor={checkmate} playerColor={turn} multiplayer={false} setOpenCheckmateModal={setOpenCheckmateModal}/> :
           ""
       }
-      <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5 text-white">
+      <div className="grid 2xl:grid-cols-3 grid-cols-1 gap-5 text-white mt-5">
         <div className="order-3 2xl:order-1">
 
         </div>
-        <div className="w-full order-1 2xl:order-2">
-          <div>Black: {turn === PieceColor.BLACK ? "your turn" : "opponent's turn"}</div>
+        <div className="w-full order-1 2xl:order-2 relative">
+          <div
+            className={`absolute bottom-0 w-full flex justify-between text-tiny font-semibold text-white pl-0.5 pb-1 z-10 pointer-events-none`}
+          >
+  
+            {["a","b","c","d","e","f","g","h"].map((file, index) => (
+              <div 
+                key={file} 
+                className={`w-1/8 text-left ${index%2 !== 0 ? "text-chess1-dark" : ""}`}
+              >
+                  {file}
+              </div>
+            ))}
+          </div>
+
+          {/* Rank labels */}
+          <div
+            className={`absolute top-0 h-full flex flex-col justify-between text-tiny font-semibold text-white pl-0.5 pt-1 z-10 pointer-events-none`}
+          >
+            {[8,7,6,5,4,3,2,1].map((rank) => (
+              <div 
+                key={rank} 
+                className={`h-1/8 text-left ${rank%2 === 0 ? "text-chess1-dark" : ""}`}
+              >
+                {rank}
+              </div>
+            ))}
+          </div>
           {showPromotionalModal ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
           {board.map((row: Array<Piece|null>, rowIndex: number) => {
             return( 
@@ -188,7 +214,6 @@ export default function SiglePlayerChessBoard() {
             </div>
             )
           })}
-          <div>White: {turn === PieceColor.WHITE ? "your turn" : "opponent's turn"}</div>
         </div>
         <div className="order-2 2xl:order-3 text-white">
           <div>Turn: {turn}</div>

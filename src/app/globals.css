@@ -8,6 +8,7 @@
   --font-mono: var(--font-geist-mono);
   --color-chess1-light: #f0d9b5;
   --color-chess1-dark: #946f51;
+  --text-tiny: 0.625rem; 
 }
 
 @media (prefers-color-scheme: dark) {

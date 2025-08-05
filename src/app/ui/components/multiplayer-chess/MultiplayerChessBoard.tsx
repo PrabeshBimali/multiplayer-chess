@@ -28,7 +28,7 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
   const socket = useSocket()
   const { addToast } = useToast()
 
-  const pieceSize: number = 50
+  const pieceSize: number = 45
 
   const [playerId, setPlayerId] = useState<string | null>(null)
   const [gameId, setGameId] = useState<string | null>(null)
@@ -316,7 +316,40 @@ export default function MultiplayerChessBoard(props: MultiplayerChessBoardProps)
             <CheckmateModal checkmateColor={checkmate} playerColor={myColor} setOpenCheckmateModal={setOpenCheckmateModal} multiplayer={true}/> : 
             ""
         }
-        <div className={`w-full order-1 2xl:order-2 ${myColor === PieceColor.BLACK ? "rotate-180" : ""}`}>
+        <div className={`w-full order-1 2xl:order-2 relative ${myColor === PieceColor.BLACK ? "rotate-180" : ""}`}>
+          {/* File labels */}
+          <div
+            className={`absolute w-full flex justify-between text-tiny font-semibold text-white pl-0.5 pb-1 z-10 pointer-events-none
+              ${myColor === PieceColor.WHITE ? "bottom-0" : "top-0 rotate-180"}
+            `}
+          >
+  
+            {(myColor === PieceColor.WHITE ? ["a","b","c","d","e","f","g","h"] : ["h","g","f","e","d","c","b","a"]).map((file, index) => (
+              <div 
+                key={file} 
+                className={`w-1/8 text-left ${index%2 !== 0 ? "text-chess1-dark" : ""}`}
+              >
+                  {file}
+              </div>
+            ))}
+          </div>
+
+          {/* Rank labels */}
+          <div
+            className={`absolute h-full flex flex-col justify-between text-tiny font-semibold text-white pl-0.5 pt-1 z-10 pointer-events-none
+              ${myColor === PieceColor.WHITE ? "top-0" : "bottom-0 pr-0.5 rotate-180"}
+            `}
+          >
+            {(myColor === PieceColor.WHITE ? [8,7,6,5,4,3,2,1] : [1,2,3,4,5,6,7,8]).map((rank) => (
+              <div 
+                key={rank} 
+                className={`h-1/8 text-left ${rank%2 === 0 ? "text-chess1-dark" : ""}`}
+              >
+                {rank}
+              </div>
+            ))}
+          </div>
+
           {showPromotionalModal && turn !== null ? <PromotionModal color={turn} promotePawn={promotePawn}/> : ""}
           {board.map((row: Array<Piece|null>, rowIndex: number) => {
             return( 
