@@ -15,7 +15,6 @@ import { useEffect, useState } from "react"
 export default function Page() {
   const socket = useSocket()
   const params = useParams()
-  const router = useRouter()
   const [openWaitingForOpponentToJoinModal, setOpenWaitingForOpponentToJoinModal] = useState<boolean>(false)
   const [openJoinNewGameModal, setOpenJoinNewGameModal] = useState<boolean>(false)
   const [newPlayerJoined, setNewPlayerJoined] = useState<boolean>(false)

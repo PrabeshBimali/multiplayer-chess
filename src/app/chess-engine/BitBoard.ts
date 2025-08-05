@@ -64,7 +64,7 @@ export default class BitBoard {
   }
 
   private emptySquares(): bigint {
-    let emptySquares: bigint = u64_not(this.occupiedSquares())
+    const emptySquares: bigint = u64_not(this.occupiedSquares())
     return emptySquares
   }
 
@@ -1330,29 +1330,53 @@ export default class BitBoard {
     const {from, to, type, color} = move
     switch(type) {
       case PieceType.PAWN:
-        color === PieceColor.WHITE ? this.moveWhitePawn(from, to) : this.moveBlackPawn(from, to)
+        if(color === PieceColor.WHITE) {
+          this.moveWhitePawn(from, to)
+        } else { 
+          this.moveBlackPawn(from, to)
+        }
         break
       
       case PieceType.ROOK:
-        color === PieceColor.WHITE ? this.moveWhiteRook(from, to) : this.moveBlackRook(from, to)
+        if (color === PieceColor.WHITE) {
+          this.moveWhiteRook(from, to)
+        } else {
+          this.moveBlackRook(from, to)
+        }
         break
-      
+
       case PieceType.BISHOP:
-        color === PieceColor.WHITE ? this.moveWhiteBishop(from, to) : this.moveBlackBishop(from, to)
+        if (color === PieceColor.WHITE) {
+          this.moveWhiteBishop(from, to)
+        } else {
+          this.moveBlackBishop(from, to)
+        }
         break
 
       case PieceType.KNIGHT:
-        color === PieceColor.WHITE ? this.moveWhiteKnight(from, to) : this.moveBlackKnight(from, to)
+        if (color === PieceColor.WHITE) {
+          this.moveWhiteKnight(from, to)
+        } else {
+          this.moveBlackKnight(from, to)
+        }
         break
 
       case PieceType.KING:
-        color === PieceColor.WHITE ? this.moveWhiteKing(from, to) : this.moveBlackKing(from, to)
+        if (color === PieceColor.WHITE) {
+          this.moveWhiteKing(from, to)
+        } else {
+          this.moveBlackKing(from, to)
+        }
         break
-      
+
       case PieceType.QUEEN:
-        color === PieceColor.WHITE ? this.moveWhiteQueen(from, to) : this.moveBlackQueen(from, to)
+        if (color === PieceColor.WHITE) {
+          this.moveWhiteQueen(from, to)
+        } else {
+          this.moveBlackQueen(from, to)
+        }
         break
-      
+
       default:
         throw new Error(`Piece ${type} not recognized`)
     }
@@ -1391,11 +1415,11 @@ export default class BitBoard {
   }
 
   private filterValidSquaresForAPiece(type: PieceType, color: PieceColor, from: number, possibleSquares: bigint): Array<number> {
-    let indexes: Array<number> = this.bitScan(possibleSquares)
-    let validSquares: Array<number> = []
+    const indexes: Array<number> = this.bitScan(possibleSquares)
+    const validSquares: Array<number> = []
 
     for (const i of indexes) {
-      let move: Move = {
+      const move: Move = {
         from: from,
         to: i,
         type: type,
@@ -1414,7 +1438,7 @@ export default class BitBoard {
   // Generate Valid For Frontend
   getValidSquaresForFrontend(piecePos: number, type: PieceType, color: PieceColor): ValidMoves {
     let possibleSquares: bigint = 0n
-    let enemySquares: bigint = color === PieceColor.WHITE ? u64_or(this.blackOccupiedSquares(), this.blackEnPassantSquares) : 
+    const enemySquares: bigint = color === PieceColor.WHITE ? u64_or(this.blackOccupiedSquares(), this.blackEnPassantSquares) : 
                                                             u64_or(this.whiteOccupiedSquares(), this.whiteEnPassantSquares)
     let castlingMoves: Array<number> = []
     switch(type) {
@@ -1441,8 +1465,8 @@ export default class BitBoard {
         throw new Error(`Piece ${type} not recognized`)
     }
 
-    let captureSquares: bigint = u64_and(possibleSquares, enemySquares)
-    let normalSquares: bigint = u64_and(u64_not(enemySquares), possibleSquares)
+    const captureSquares: bigint = u64_and(possibleSquares, enemySquares)
+    const normalSquares: bigint = u64_and(u64_not(enemySquares), possibleSquares)
     const normalMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, normalSquares)
     const captureMoves: Array<number> = this.filterValidSquaresForAPiece(type, color, piecePos, captureSquares)
     normalMoves.push(...castlingMoves)

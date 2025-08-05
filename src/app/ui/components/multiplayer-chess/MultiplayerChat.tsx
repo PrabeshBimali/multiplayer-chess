@@ -80,8 +80,8 @@ export default function MultiplayerChat(props: MultiplayerChatProps) {
     async function initializeChat() {
       let storedPlayerId: string | null = localStorage.getItem("playerid")
       let storedGameId: string | null = localStorage.getItem("gameid")
-      let storedColor: string | null = localStorage.getItem("color")
-      let color: PieceColor | null = storedColor === PieceColor.WHITE || storedColor === PieceColor.BLACK ? storedColor : null
+      const storedColor: string | null = localStorage.getItem("color")
+      const color: PieceColor | null = storedColor === PieceColor.WHITE || storedColor === PieceColor.BLACK ? storedColor : null
 
       if(!storedPlayerId || storedPlayerId === "undefined") {
         storedPlayerId = null

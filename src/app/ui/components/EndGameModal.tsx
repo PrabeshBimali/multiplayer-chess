@@ -1,5 +1,4 @@
 import { useSocket } from "@/app/context/SocketProvider"
-import { useCallback, useEffect } from "react"
 
 interface EndGameModalProps {
   setOpenEndGameModal: React.Dispatch<React.SetStateAction<boolean>>
@@ -14,10 +13,9 @@ export default function EndGameModal(props: EndGameModalProps) {
   function endGame() {
     if(!socket) return
 
-    let gameid = localStorage.getItem("gameid")
-    let playerid = localStorage.getItem("playerid")
+    const gameid = localStorage.getItem("gameid")
+    const playerid = localStorage.getItem("playerid")
 
-    
     if(!gameid || gameid === "undefined") {
       console.error(`Gameid is not defined`)
       return

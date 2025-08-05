@@ -23,7 +23,7 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
   useEffect(() => {
     if (!socket) return
 
-    const handleSuccess = ({ gameid, playerid, color }: any) => {
+    const handleSuccess = ({ gameid, playerid, color }: {gameid: string, playerid: string, color: string}) => {
       console.log("Join Success", { gameid, playerid, color })
 
       localStorage.setItem("gameid", gameid)
@@ -35,7 +35,7 @@ export default function JoinNewGameModal(props: JoinNewGameModalProps) {
       router.refresh()
     }
 
-    const handleFail = (gameid: string) => {
+    const handleFail = () => {
       alert("Failed to join game. Game might have already started.")
     }
 

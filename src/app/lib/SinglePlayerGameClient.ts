@@ -72,7 +72,7 @@ export default class SinglePlayerGameClient {
 
   getPreviousMove(): Array<Position> {
     if(this.previousMove === null) return []
-    let prevMoves: Array<Position> = []
+    const prevMoves: Array<Position> = []
     prevMoves.push(this.previousMove.from)
     prevMoves.push(this.previousMove.to)
     return prevMoves
