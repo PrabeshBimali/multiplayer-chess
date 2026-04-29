@@ -66,7 +66,8 @@ Representation in Bit: $$\begin{bmatrix}
 Now lets assume user wants to move pawn at `B2` to `B3`. Which bit to move and where is highlighted below:
 
 
-Piece to move: $$\begin{bmatrix}
+Piece to move: 
+$$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -79,7 +80,8 @@ Piece to move: $$\begin{bmatrix}
 
 &nbsp;
 
-Position to move: $$\begin{bmatrix}
+Position to move: 
+$$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -89,3 +91,19 @@ Position to move: $$\begin{bmatrix}
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \end{bmatrix}$$
+
+&nbsp;
+
+$$
+\begin{array}{c|cccccccc}
+  & \text{a} & \text{b} & \text{c} & \text{d} & \text{e} & \text{f} & \text{g} & \text{h} \\ \hline
+8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+6 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+5 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+4 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 1 & \color{red}{1} & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 
+\end{array}
+$$
