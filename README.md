@@ -52,7 +52,9 @@ Now lets see an example how moving a **WHITE PAWN** from its initial position ca
 
 In Hex: `0x000000000000FF00`
 
-Representation in Bit: $$\begin{bmatrix}
+Representation in Bit: 
+
+$$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -67,6 +69,7 @@ Now lets assume user wants to move pawn at `B2` to `B3`. Which bit to move and w
 
 
 Piece to move: 
+
 $$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
@@ -81,6 +84,7 @@ $$\begin{bmatrix}
 &nbsp;
 
 Position to move: 
+
 $$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
@@ -94,9 +98,10 @@ $$\begin{bmatrix}
 
 &nbsp;
 
+
 $$
 \begin{array}{c|cccccccc}
-  & \text{a} & \text{b} & \text{c} & \text{d} & \text{e} & \text{f} & \text{g} & \text{h} \\ \hline
+ & a & b & c & d & e & f & g & h \\ \hline
 8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 6 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -104,6 +109,6 @@ $$
 4 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 2 & 1 & \color{red}{1} & 1 & 1 & 1 & 1 & 1 & 1 \\
-1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
 \end{array}
 $$
