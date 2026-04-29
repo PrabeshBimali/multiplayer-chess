@@ -28,7 +28,7 @@ In above code example, initial position of Black pawn is `0x00FF000000000000n` w
 
 `0 = 0000` and `F = 1111`
 
-$\begin{bmatrix}
+$$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 1 &1 &1 &1 &1 &1 &1 &1
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -37,7 +37,7 @@ $\begin{bmatrix}
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
-\end{bmatrix}$
+\end{bmatrix}$$
 
 **1** represents presence of Black pawn and **0** represents their absence. So this way we can represent all `Black` and `White` chess pieces with just twelve 8 bytes integers.
 
@@ -52,7 +52,7 @@ Now lets see an example how moving a **WHITE PAWN** from its initial position ca
 
 In Hex: `0x000000000000FF00`
 
-Representation in Bit: $\begin{bmatrix}
+Representation in Bit: $$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -61,12 +61,12 @@ Representation in Bit: $\begin{bmatrix}
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 1 &1 &1 &1 &1 &1 &1 &1
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
-\end{bmatrix}$
+\end{bmatrix}$$
 
 Now lets assume user wants to move pawn at `B2` to `B3`. Which bit to move and where is highlighted below:
 
 
-Piece to move: $\begin{bmatrix}
+Piece to move: $$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -75,11 +75,11 @@ Piece to move: $\begin{bmatrix}
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 1 &\color{red}{\mathbf{1}} &1 &1 &1 &1 &1 &1
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
-\end{bmatrix}$
+\end{bmatrix}$$
 
 &nbsp;
 
-Position to move: $\begin{bmatrix}
+Position to move: $$\begin{bmatrix}
 0 &0 &0 &0 &0 &0 &0 &0
 \\\0 &0 &0 &0 &0 &0 &0 &0 
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
@@ -88,4 +88,4 @@ Position to move: $\begin{bmatrix}
 \\\ 0 &\color{red}{\mathbf{1}} &0 &0 &0 &0 &0 &0
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
 \\\ 0 &0 &0 &0 &0 &0 &0 &0
-\end{bmatrix}$
+\end{bmatrix}$$
