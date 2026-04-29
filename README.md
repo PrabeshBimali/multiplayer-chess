@@ -1,36 +1,91 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+ # Multiplayer Chess Frontend
 
-## Getting Started
+ ## How to run this Frontend Locally 
 
-First, run the development server:
+1.) First create a .env.local file in the root folder and fill it with `NEXT_PUBLIC_API_URL` (*Check [Backend Repo](https://github.com/PrabeshBimali/multiplayer-chess-backend) for setting up backend locally*) fields as shown in figure below.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+![.env.local file](./public/demo/env.png)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+2.) While in root folder in terminal run `npm install` command and wait for it to install all packages.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+3.) After all packages are installed run `npm run dev` and your server should be up and running locally at `http://localhost:3000`.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
+For Live Demo check the URL below  
+(*Note: This backend as well as Redis is run in free server so sometime it will not work or take long time to work*)
 
-To learn more about Next.js, take a look at the following resources:
+Live Preview: (https://multiplayer-chess-five.vercel.app/)
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Backend URL: (https://github.com/PrabeshBimali/multiplayer-chess-backend)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Algorithm and Data structure used 
 
-## Deploy on Vercel
+Since chess has 8x8 = 64 cells in total I used 8 bytes (64 bits) int to represent position of a piece as shown in the figure below. 
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+![Initial Positions](./public/demo/initial-pos-code.png)
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+In above code example, initial position of Black pawn is `0x00FF000000000000n` which if we convert to bits looks like this:
+
+`0 = 0000` and `F = 1111`
+
+$\begin{bmatrix}
+0 &0 &0 &0 &0 &0 &0 &0 
+\\\ 1 &1 &1 &1 &1 &1 &1 &1
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\end{bmatrix}$
+
+**1** represents presence of Black pawn and **0** represents their absence. So this way we can represent all `Black` and `White` chess pieces with just twelve 8 bytes integers.
+
+For generating move or moving pieces Bitwise operations (**OR, AND, NOT, SHIFT**) are used.
+
+### How to move a piece
+In order to move a piece move function accepts `from`, `to`, and `color`. **From** and **to** are between 0 and 63, 0 being first bit of 64 bit integer, 63 being last bit. `from` and `color` tells the function which piece to move and `to` tells where to move.
+
+Now lets see an example how moving a **WHITE PAWN** from its initial position can be achieved.
+
+**Initial position of all White Pawns**
+
+In Hex: `0x000000000000FF00`
+
+Representation in Bit: $\begin{bmatrix}
+0 &0 &0 &0 &0 &0 &0 &0
+\\\0 &0 &0 &0 &0 &0 &0 &0 
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 1 &1 &1 &1 &1 &1 &1 &1
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\end{bmatrix}$
+
+Now lets assume user wants to move pawn at `B2` to `B3`. Which bit to move and where is highlighted below:
+
+
+Piece to move: $\begin{bmatrix}
+0 &0 &0 &0 &0 &0 &0 &0
+\\\0 &0 &0 &0 &0 &0 &0 &0 
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 1 &\color{red}{\mathbf{1}} &1 &1 &1 &1 &1 &1
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\end{bmatrix}$
+
+&nbsp;
+
+Position to move: $\begin{bmatrix}
+0 &0 &0 &0 &0 &0 &0 &0
+\\\0 &0 &0 &0 &0 &0 &0 &0 
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &\color{red}{\mathbf{1}} &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\\\ 0 &0 &0 &0 &0 &0 &0 &0
+\end{bmatrix}$
