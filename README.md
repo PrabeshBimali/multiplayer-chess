@@ -98,9 +98,8 @@ $$\begin{bmatrix}
 
 &nbsp;
 
-
-$$\begin{array}{c|cccccccc}
- & a & b & c & d & e & f & g & h \\ \hline
+$$\begin{matrix}
+  & a & b & c & d & e & f & g & h \\
 8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 6 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -109,4 +108,4 @@ $$\begin{array}{c|cccccccc}
 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 2 & 1 & \color{red}{1} & 1 & 1 & 1 & 1 & 1 & 1 \\
 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
-\end{array}$$
+\end{matrix}$$
