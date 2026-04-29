@@ -99,8 +99,7 @@ $$\begin{bmatrix}
 &nbsp;
 
 
-$$
-\begin{array}{c|cccccccc}
+$$\begin{array}{c|cccccccc}
  & a & b & c & d & e & f & g & h \\ \hline
 8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
@@ -110,5 +109,4 @@ $$
 3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
 2 & 1 & \color{red}{1} & 1 & 1 & 1 & 1 & 1 & 1 \\
 1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
-\end{array}
-$$
+\end{array}$$
