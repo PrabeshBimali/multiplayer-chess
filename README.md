@@ -18,6 +18,26 @@ Live Preview: (https://multiplayer-chess-five.vercel.app/)
 
 Backend URL: (https://github.com/PrabeshBimali/multiplayer-chess-backend)
 
+&nbsp;
+
+## Demo If Code Did NOT Run Locally
+
+![Main page](./public/demo/main-page.png)
+
+1.) As shown above, Once user opens the site there will be two buttons `Create New Game` which is for creating a multiplayer game `Play Single Player` which is for playing locally.
+
+2.) After user clicks `Create New Game` and chooses color, a link will be provided to the user which they can share with other player to join the game.
+
+![Share link](./public/demo/share-link.png)
+
+3.) After second user joins the game, two players can play multiplayer chess as shown in figure below. Possible moves for selected piece, previous move, possible captures and turn are all shown in the UI.
+
+![Multiplayer chess gameplay](./public/demo/multiplayer-game.png)
+
+4.) Games rules like **check, checkmate, en passant, castling rights** are all present in the game.  
+
+&nbsp;
+
 ## Algorithm and Data structure used 
 
 Since chess has 8x8 = 64 cells in total I used 8 bytes (64 bits) int to represent position of a piece as shown in the figure below. 
