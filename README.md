@@ -18,7 +18,7 @@ Live Preview: (https://multiplayer-chess-five.vercel.app/)
 
 Backend URL: (https://github.com/PrabeshBimali/multiplayer-chess-backend)
 
-### Algorithm and Data structure used 
+## Algorithm and Data structure used 
 
 Since chess has 8x8 = 64 cells in total I used 8 bytes (64 bits) int to represent position of a piece as shown in the figure below. 
 
@@ -99,3 +99,70 @@ $$\begin{matrix}
 \end{matrix}$$
 
 &nbsp;
+
+**First remove the White Pawn at `B2` from its position**
+
+To achieve this we do: `Position of White Pawns` **XOR** `Position of from`
+
+```
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |   XOR   | 0 0 0 0 0 0 0 0 |  =  | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 1 1 1 1 1 1 1 1 |         | 0 1 0 0 0 0 0 0 |     | 1 0 1 1 1 1 1 1 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+```
+&nbsp;
+
+Now White Pawns Positions looks like this:
+
+$$\begin{matrix}
+  & A & B & C & D & E & F & G & H \\
+8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+6 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+5 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+4 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+3 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 1 & \color{red}{0} & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{matrix}$$
+
+&nbsp;
+
+**Now move white pawn removed from `B2` to `B3`**
+
+To achieve this we do: `Position of White Pawns after removal` **OR** `Position of to`
+
+```
+
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |   OR    | 0 0 0 0 0 0 0 0 |  =  | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+      | 0 0 0 0 0 0 0 0 |         | 0 1 0 0 0 0 0 0 |     | 0 1 0 0 0 0 0 0 |
+      | 1 0 1 1 1 1 1 1 |         | 0 0 0 0 0 0 0 0 |     | 1 0 1 1 1 1 1 1 |
+      | 0 0 0 0 0 0 0 0 |         | 0 0 0 0 0 0 0 0 |     | 0 0 0 0 0 0 0 0 |
+```
+
+Final Position of White Pawns after the move:
+
+$$\begin{matrix}
+  & A & B & C & D & E & F & G & H \\
+8 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+7 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+6 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+5 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+4 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0 \\
+3 & 0 & \color{red}{1} & 0 & 0 & 0 & 0 & 0 & 0 \\
+2 & 1 & 0 & 1 & 1 & 1 & 1 & 1 & 1 \\
+1 & 0 & 0 & 0 & 0 & 0 & 0 & 0 & 0
+\end{matrix}$$
+
+&nbsp;
+
+This way we can move position of a piece. Real implementation is much more complicated since we need to validate moves.
+
